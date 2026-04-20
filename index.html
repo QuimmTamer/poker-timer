@@ -1159,19 +1159,18 @@ function renderTimer() {
   const pool = getPrizePool();
   document.getElementById('t-pool').textContent = fmtMoney(pool);
 
-  // Payout rows
+  // Payout rows — always visible
   const payRows = document.getElementById('t-payrows');
-  if (pool === 0) {
-    payRows.innerHTML = `<div class="pay-row" style="justify-content:center;color:var(--muted);font-size:13px;">Buy-ins will appear here</div>`;
-  } else {
-    const payouts = getPayouts(pool);
-    payRows.innerHTML = payouts.map((amt, i) =>
-      `<div class="pay-row">
-        <span class="pay-place ${placeCls(i)}">${placeLabel(i)}</span>
-        <span><span class="pay-amt">${fmtMoney(amt)}</span><span class="pay-pct">${S.payPct[i]}%</span></span>
-      </div>`
-    ).join('');
-  }
+  const payouts = getPayouts(pool);
+  payRows.innerHTML = S.payPct.slice(0, S.payPlaces).map((pct, i) =>
+    `<div class="pay-row">
+      <span class="pay-place ${placeCls(i)}">${placeLabel(i)}</span>
+      <span>
+        <span class="pay-amt">${pool > 0 ? fmtMoney(payouts[i]) : '—'}</span>
+        <span class="pay-pct">${pct}%</span>
+      </span>
+    </div>`
+  ).join('');
 }
 
 function renderTimerClock(rem) {

@@ -203,6 +203,52 @@
       font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:background .15s;}
     .btn-danger:active{background:rgba(231,76,60,.22);}
 
+    /* ── PRESETS TAB ── */
+    .pre-wrap{padding:14px;display:flex;flex-direction:column;gap:14px;}
+    .pre-save-box{background:var(--card);border:1px solid var(--border);
+      border-radius:14px;overflow:hidden;}
+    .pre-save-hdr{background:var(--card2);padding:10px 14px;font-size:12px;
+      font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;}
+    .pre-save-body{padding:14px;display:flex;flex-direction:column;gap:10px;}
+    .pre-name-row{display:flex;gap:8px;}
+    .pre-name-input{flex:1;background:var(--bg2);border:1px solid var(--border);
+      border-radius:8px;color:var(--txt);padding:10px 12px;font-size:15px;}
+    .pre-name-input:focus{outline:none;border-color:var(--gold);}
+    .btn-pre-save{background:var(--gold);color:var(--bg);border:none;
+      border-radius:8px;padding:10px 18px;font-size:14px;font-weight:800;
+      cursor:pointer;white-space:nowrap;transition:opacity .15s;}
+    .btn-pre-save:active{opacity:.8;}
+    .pre-hint{font-size:12px;color:var(--muted);line-height:1.5;}
+    .pre-list-hdr{font-size:12px;font-weight:800;color:var(--muted);
+      text-transform:uppercase;letter-spacing:.1em;padding:0 2px;}
+    .pre-empty{background:var(--card);border:1px solid var(--border);
+      border-radius:14px;padding:32px 16px;text-align:center;
+      color:var(--muted);font-size:14px;}
+    .pre-card{background:var(--card);border:1px solid var(--border);
+      border-radius:14px;overflow:hidden;transition:border-color .2s;}
+    .pre-card:hover{border-color:var(--gold);}
+    .pre-card-top{display:flex;align-items:center;gap:10px;padding:14px;}
+    .pre-icon{font-size:28px;flex-shrink:0;}
+    .pre-info{flex:1;min-width:0;}
+    .pre-title{font-size:17px;font-weight:800;color:var(--txt);
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+    .pre-meta{font-size:12px;color:var(--muted);margin-top:3px;}
+    .pre-actions{display:flex;gap:8px;flex-shrink:0;}
+    .btn-pre-load{height:36px;border-radius:8px;border:2px solid var(--gold);
+      background:none;color:var(--gold);font-size:13px;font-weight:700;
+      cursor:pointer;padding:0 14px;transition:background .15s;}
+    .btn-pre-load:active{background:rgba(201,168,76,.15);}
+    .btn-pre-del{width:36px;height:36px;border-radius:8px;
+      border:1px solid var(--border);background:none;
+      color:var(--muted);cursor:pointer;font-size:18px;transition:all .2s;}
+    .btn-pre-del:active{border-color:var(--red);color:var(--red);}
+    .pre-card-details{border-top:1px solid var(--border);
+      display:grid;grid-template-columns:repeat(3,1fr);gap:0;}
+    .pre-detail{padding:8px 12px;text-align:center;border-right:1px solid var(--border);}
+    .pre-detail:last-child{border-right:none;}
+    .pre-detail-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+    .pre-detail-val{font-size:14px;font-weight:700;color:var(--txt2);margin-top:1px;}
+
     /* ── INSTRUCTIONS TAB ── */
     .inst-wrap{padding:16px;display:flex;flex-direction:column;gap:14px;}
     .inst-sec{background:var(--card);border:1px solid var(--border);
@@ -394,6 +440,29 @@
   </div>
 </div>
 
+<!-- ═══════════ PRESETS TAB ═══════════ -->
+<div id="p-presets" class="panel">
+  <div class="pre-wrap">
+
+    <div class="pre-save-box">
+      <div class="pre-save-hdr">💾 Save Current Settings as Preset</div>
+      <div class="pre-save-body">
+        <div class="pre-name-row">
+          <input type="text" class="pre-name-input" id="pre-name-input"
+            placeholder="e.g. Friday Night $50 Rebuy"
+            maxlength="40">
+          <button class="btn-pre-save" onclick="savePreset()">Save</button>
+        </div>
+        <div class="pre-hint">Saves tournament name, buy-in amounts, level duration, break schedule, blind structure, and payout percentages. Player registrations are not saved.</div>
+      </div>
+    </div>
+
+    <div class="pre-list-hdr" id="pre-list-hdr">Saved Tournaments</div>
+    <div id="pre-list"></div>
+
+  </div>
+</div>
+
 <!-- ═══════════ INSTRUCTIONS TAB ═══════════ -->
 <div id="p-help" class="panel">
   <div class="inst-wrap">
@@ -519,6 +588,10 @@
   <button class="tbtn" id="tb-settings" onclick="switchTab('settings')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
     Settings
+  </button>
+  <button class="tbtn" id="tb-presets" onclick="switchTab('presets')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm2 16H5V5h11.17L19 7.83V19zm-7-7c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zM6 6h9v4H6z"/></svg>
+    Presets
   </button>
   <button class="tbtn" id="tb-help" onclick="switchTab('help')">
     <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
@@ -1265,6 +1338,7 @@ const tabMap = {
   timer:    ['p-timer',    'tb-timer'],
   reg:      ['p-reg',      'tb-reg'],
   settings: ['p-settings', 'tb-settings'],
+  presets:  ['p-presets',  'tb-presets'],
   help:     ['p-help',     'tb-help'],
 };
 
@@ -1280,6 +1354,138 @@ function switchTab(id) {
   if (id === 'settings') loadSettingsToForm();
   if (id === 'reg') renderReg();
   if (id === 'timer') renderTimer();
+  if (id === 'presets') renderPresets();
+}
+
+// ═══════════════════════════════════════════════════
+// PRESETS
+// ═══════════════════════════════════════════════════
+
+function loadPresets() {
+  try { return JSON.parse(localStorage.getItem('pt_presets') || '[]'); }
+  catch(e) { return []; }
+}
+
+function savePresetsStore(presets) {
+  localStorage.setItem('pt_presets', JSON.stringify(presets));
+}
+
+function savePreset() {
+  const nameEl = document.getElementById('pre-name-input');
+  const name = nameEl.value.trim();
+  if (!name) { toast('Enter a name for this preset'); nameEl.focus(); return; }
+
+  const presets = loadPresets();
+  const exists = presets.findIndex(p => p.name.toLowerCase() === name.toLowerCase());
+
+  const preset = {
+    id: Date.now(),
+    name,
+    savedAt: new Date().toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}),
+    settings: deepClone(S),
+  };
+
+  if (exists >= 0) {
+    if (!confirm(`"${name}" already exists. Overwrite it?`)) return;
+    preset.id = presets[exists].id;
+    presets[exists] = preset;
+    toast(`"${name}" updated`);
+  } else {
+    presets.unshift(preset);
+    toast(`"${name}" saved!`);
+  }
+
+  savePresetsStore(presets);
+  nameEl.value = '';
+  renderPresets();
+}
+
+function loadPreset(id) {
+  const presets = loadPresets();
+  const preset = presets.find(p => p.id === id);
+  if (!preset) return;
+  if (!confirm(`Load "${preset.name}"?\nThis will replace your current settings.`)) return;
+
+  S = deepClone(preset.settings);
+  // Ensure all keys present (forward compat)
+  for (const k in DEFAULT_SETTINGS) {
+    if (S[k] === undefined) S[k] = DEFAULT_SETTINGS[k];
+  }
+  localStorage.setItem('pt_settings', JSON.stringify(S));
+
+  // Reset timer to level 1 with new settings
+  T.level = 1;
+  T.isBreak = false;
+  T.running = false;
+  T.remSec = getLvlSec();
+  T.startTs = null;
+  w60 = false; w30 = false;
+  cancelAnimationFrame(rafId);
+  saveTimer();
+
+  toast(`✅ "${preset.name}" loaded — timer reset to Level 1`);
+  renderTimer();
+  renderPresets();
+}
+
+function deletePreset(id) {
+  const presets = loadPresets();
+  const preset = presets.find(p => p.id === id);
+  if (!preset) return;
+  if (!confirm(`Delete "${preset.name}"?`)) return;
+  const updated = presets.filter(p => p.id !== id);
+  savePresetsStore(updated);
+  toast(`"${preset.name}" deleted`);
+  renderPresets();
+}
+
+function renderPresets() {
+  const presets = loadPresets();
+  const el = document.getElementById('pre-list');
+  const hdr = document.getElementById('pre-list-hdr');
+
+  hdr.textContent = `Saved Tournaments (${presets.length})`;
+
+  if (presets.length === 0) {
+    el.innerHTML = `<div class="pre-empty">
+      No saved tournaments yet.<br>Configure your settings, then save a preset above.
+    </div>`;
+    return;
+  }
+
+  el.innerHTML = presets.map(p => {
+    const ps = p.settings;
+    const buyInStr = `$${ps.buyin} buy-in`;
+    const levelsStr = `${ps.blinds ? ps.blinds.length : '?'} levels`;
+    const lvlMinStr = `${ps.lvlMin}min`;
+    return `<div class="pre-card">
+      <div class="pre-card-top">
+        <div class="pre-icon">♠</div>
+        <div class="pre-info">
+          <div class="pre-title">${esc(p.name)}</div>
+          <div class="pre-meta">Saved ${p.savedAt} &nbsp;·&nbsp; ${esc(ps.name||'')}</div>
+        </div>
+        <div class="pre-actions">
+          <button class="btn-pre-load" onclick="loadPreset(${p.id})">Load</button>
+          <button class="btn-pre-del" onclick="deletePreset(${p.id})" title="Delete">🗑</button>
+        </div>
+      </div>
+      <div class="pre-card-details">
+        <div class="pre-detail">
+          <div class="pre-detail-lbl">Buy-In</div>
+          <div class="pre-detail-val">${buyInStr}</div>
+        </div>
+        <div class="pre-detail">
+          <div class="pre-detail-lbl">Levels</div>
+          <div class="pre-detail-val">${levelsStr} · ${lvlMinStr}</div>
+        </div>
+        <div class="pre-detail">
+          <div class="pre-detail-lbl">Pays</div>
+          <div class="pre-detail-val">${ps.payPlaces || 3} places</div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════════════════

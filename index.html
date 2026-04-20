@@ -261,6 +261,23 @@
     .inst-body a{color:var(--gold);text-decoration:none;}
     .ver{text-align:center;padding:6px;font-size:11px;color:var(--muted);}
 
+    /* ── SOUND SELECTOR ── */
+    .snd-opts{display:flex;flex-direction:column;gap:8px;padding:12px 14px;}
+    .snd-opt{display:flex;align-items:center;gap:12px;padding:10px 12px;
+      background:var(--bg2);border:2px solid var(--border);border-radius:10px;
+      cursor:pointer;transition:border-color .15s,background .15s;}
+    .snd-opt.sel{border-color:var(--gold);background:rgba(201,168,76,.08);}
+    .snd-dot{width:18px;height:18px;border-radius:50%;border:2px solid var(--border);
+      flex-shrink:0;transition:all .15s;}
+    .snd-opt.sel .snd-dot{background:var(--gold);border-color:var(--gold);}
+    .snd-info{flex:1;}
+    .snd-name{font-size:14px;font-weight:700;}
+    .snd-desc{font-size:11px;color:var(--muted);margin-top:1px;}
+    .btn-test{height:30px;border-radius:6px;border:1px solid var(--border);
+      background:var(--bg);color:var(--gold);font-size:12px;font-weight:700;
+      cursor:pointer;padding:0 12px;white-space:nowrap;transition:background .1s;}
+    .btn-test:active{background:rgba(201,168,76,.15);}
+
     /* ── RESPONSIVE / TV ── */
     @media(min-width:700px){
       .info-row{grid-template-columns:repeat(4,1fr);}
@@ -414,6 +431,10 @@
         <div class="set-lbl">Sound Notifications</div>
         <label class="toggle"><input type="checkbox" id="s-sound" checked><span class="tslider"></span></label>
       </div>
+      <div class="set-row" style="flex-direction:column;align-items:stretch;gap:6px;padding-bottom:0;">
+        <div class="set-lbl">Alert Sound<div class="set-sub">Plays when a level ends</div></div>
+      </div>
+      <div class="snd-opts" id="snd-opts"></div>
     </div>
 
     <div class="set-sec">
@@ -639,6 +660,7 @@ const DEFAULT_SETTINGS = {
   cutoff: 4,
   ante: true,
   sound: true,
+  alertSound: 'chime',
   payPlaces: 3,
   payPct: [50, 30, 20],
   blinds: DEFAULT_BLINDS.map(b => ({...b})),
@@ -746,40 +768,102 @@ function getAudioCtx() {
 function beep(freq, dur, vol=0.4, type='sine') {
   try {
     const ctx = getAudioCtx();
-    const o = ctx.createOscillator();
-    const g = ctx.createGain();
-    o.connect(g); g.connect(ctx.destination);
-    o.type = type;
-    o.frequency.setValueAtTime(freq, ctx.currentTime);
-    g.gain.setValueAtTime(vol, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
-    o.start(ctx.currentTime);
-    o.stop(ctx.currentTime + dur);
+    // iOS suspends AudioContext unless resumed — do it every time
+    const play = () => {
+      const o = ctx.createOscillator();
+      const g = ctx.createGain();
+      o.connect(g); g.connect(ctx.destination);
+      o.type = type;
+      o.frequency.setValueAtTime(freq, ctx.currentTime);
+      g.gain.setValueAtTime(vol, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      o.start(ctx.currentTime);
+      o.stop(ctx.currentTime + dur);
+    };
+    if (ctx.state === 'suspended') { ctx.resume().then(play); } else { play(); }
   } catch(e) {}
 }
 
-function sndLevelChange() {
-  beep(440, 0.15, 0.5);
-  setTimeout(() => beep(554, 0.15, 0.5), 160);
-  setTimeout(() => beep(659, 0.4,  0.5), 320);
-}
+// ── Sound library — each has a play() for level-end and an optional break/breakEnd override
+const SOUNDS = {
+  chime: {
+    name: 'Chime',
+    desc: 'Soft 3-note ascending melody',
+    play:     () => { beep(440,.15,.5); setTimeout(()=>beep(554,.15,.5),160); setTimeout(()=>beep(659,.45,.5),320); },
+    playBreak:() => { beep(659,.15,.4); setTimeout(()=>beep(554,.15,.4),160); setTimeout(()=>beep(440,.45,.4),320); },
+  },
+  buzzer: {
+    name: 'Buzzer',
+    desc: 'Sharp game-show buzz',
+    play:     () => { beep(160,.12,.6,'sawtooth'); setTimeout(()=>beep(120,.55,.65,'sawtooth'),100); },
+    playBreak:() => { beep(160,.12,.6,'sawtooth'); setTimeout(()=>beep(120,.55,.65,'sawtooth'),100); },
+  },
+  bell: {
+    name: 'Casino Bell',
+    desc: 'Clear sustained ring',
+    play:     () => { beep(1046,.7,.45,'sine'); setTimeout(()=>beep(1318,.5,.25,'sine'),50); },
+    playBreak:() => { beep(784,.7,.4,'sine'); setTimeout(()=>beep(659,.5,.2,'sine'),50); },
+  },
+  horn: {
+    name: 'Air Horn',
+    desc: 'Loud attention-getting blast',
+    play:     () => { beep(220,.1,.6,'sawtooth'); setTimeout(()=>beep(196,.7,.7,'sawtooth'),80); },
+    playBreak:() => { beep(220,.1,.5,'sawtooth'); setTimeout(()=>beep(196,.5,.55,'sawtooth'),80); },
+  },
+  fanfare: {
+    name: 'Fanfare',
+    desc: 'Short trumpet-style burst',
+    play:     () => {
+      beep(523,.1,.5,'square');
+      setTimeout(()=>beep(523,.08,.5,'square'),130);
+      setTimeout(()=>beep(659,.08,.5,'square'),260);
+      setTimeout(()=>beep(784,.4,.5,'square'),380);
+    },
+    playBreak:() => { beep(523,.1,.4,'square'); setTimeout(()=>beep(392,.5,.4,'square'),130); },
+  },
+  countdown: {
+    name: 'Countdown Beeps',
+    desc: '3 rapid beeps then a long tone',
+    play:     () => {
+      beep(880,.08,.45); setTimeout(()=>beep(880,.08,.45),200);
+      setTimeout(()=>beep(880,.08,.45),400); setTimeout(()=>beep(1108,.6,.5),600);
+    },
+    playBreak:() => { beep(660,.08,.4); setTimeout(()=>beep(660,.08,.4),200); setTimeout(()=>beep(440,.6,.4),400); },
+  },
+};
 
-function sndBreak() {
-  beep(523, 0.3, 0.4);
-  setTimeout(() => beep(392, 0.3, 0.4), 320);
-  setTimeout(() => beep(330, 0.5, 0.35), 640);
-}
-
-function sndBreakEnd() {
-  beep(330, 0.15, 0.4);
-  setTimeout(() => beep(392, 0.15, 0.4), 160);
-  setTimeout(() => beep(523, 0.4,  0.5), 320);
-}
-
-function sndWarn() { beep(880, 0.08, 0.35); }
-function sndWarn2() { beep(880, 0.08, 0.4); setTimeout(()=>beep(880,0.08,.4),140); }
+function sndLevelChange() { (SOUNDS[S.alertSound]||SOUNDS.chime).play(); }
+function sndBreak()       { const s=SOUNDS[S.alertSound]||SOUNDS.chime; (s.playBreak||s.play)(); }
+function sndBreakEnd()    { (SOUNDS[S.alertSound]||SOUNDS.chime).play(); }
+function sndWarn()        { beep(880,.08,.35); }
+function sndWarn2()       { beep(880,.08,.4); setTimeout(()=>beep(880,.08,.4),140); }
 
 function canSound() { return !T.muted && S.sound; }
+
+function renderSoundOptions() {
+  const el = document.getElementById('snd-opts');
+  if (!el) return;
+  el.innerHTML = Object.entries(SOUNDS).map(([key, snd]) =>
+    `<div class="snd-opt${S.alertSound===key?' sel':''}" onclick="selectSound('${key}')">
+      <div class="snd-dot"></div>
+      <div class="snd-info">
+        <div class="snd-name">${snd.name}</div>
+        <div class="snd-desc">${snd.desc}</div>
+      </div>
+      <button class="btn-test" onclick="event.stopPropagation();testSound('${key}')">▶ Test</button>
+    </div>`
+  ).join('');
+}
+
+function selectSound(key) {
+  S.alertSound = key;
+  renderSoundOptions();
+}
+
+function testSound(key) {
+  try { getAudioCtx().resume(); } catch(e) {}
+  (SOUNDS[key]||SOUNDS.chime).play();
+}
 
 // ═══════════════════════════════════════════════════
 // TIMER ENGINE
@@ -1162,6 +1246,7 @@ function loadSettingsToForm() {
   document.getElementById('s-ante').checked = S.ante;
   document.getElementById('s-sound').checked = S.sound;
   document.getElementById('s-payplaces').value = S.payPlaces;
+  renderSoundOptions();
   renderPayoutSettings();
   renderBlindList();
 }
@@ -1231,6 +1316,7 @@ function saveSettings() {
   S.cutoff = +document.getElementById('s-cutoff').value || 4;
   S.ante = document.getElementById('s-ante').checked;
   S.sound = document.getElementById('s-sound').checked;
+  // alertSound is set live via selectSound(), already in S
   S.payPlaces = +document.getElementById('s-payplaces').value || 3;
 
   // Validate payout percentages sum

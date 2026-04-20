@@ -278,6 +278,36 @@
       cursor:pointer;padding:0 12px;white-space:nowrap;transition:background .1s;}
     .btn-test:active{background:rgba(201,168,76,.15);}
 
+    /* ── FULLSCREEN BUTTON ── */
+    .btn-fs{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      width:36px;height:36px;border-radius:8px;border:1px solid var(--border);
+      background:var(--card);color:var(--txt2);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:18px;
+      transition:all .2s;}
+    .btn-fs:active{background:var(--card2);}
+    .t-head{position:relative;}
+
+    /* ── LANDSCAPE TWO-COLUMN LAYOUT ── */
+    .t-layout{display:flex;flex-direction:column;flex:1;min-height:0;}
+    .t-left{display:flex;flex-direction:column;flex:1;min-height:0;}
+    .t-right{display:flex;flex-direction:column;}
+
+    @media (orientation:landscape) and (max-height:600px){
+      #p-timer{flex-direction:column;}
+      .t-layout{flex-direction:row;overflow:hidden;flex:1;}
+      .t-left{flex:1;overflow-y:auto;border-right:1px solid var(--border);min-width:0;}
+      .t-right{width:260px;overflow-y:auto;flex-shrink:0;
+        padding-bottom:calc(var(--tab) + var(--safe) + 4px);}
+      .t-clock{font-size:clamp(44px,13vw,88px);}
+      .blinds-val{font-size:clamp(20px,6vw,44px);}
+      .t-main{gap:6px;padding:6px 12px;}
+      .t-head{padding:8px 12px 4px;}
+      .t-name{font-size:clamp(13px,3vw,22px);}
+      .info-row{grid-template-columns:1fr 1fr;padding:8px 10px 6px;}
+      .pay-section{margin:0 10px 8px;}
+      .t-controls{padding:4px 10px 6px;}
+    }
+
     /* ── RESPONSIVE / TV ── */
     @media(min-width:700px){
       .info-row{grid-template-columns:repeat(4,1fr);}
@@ -304,48 +334,62 @@
 
 <!-- ═══════════ TIMER TAB ═══════════ -->
 <div id="p-timer" class="panel active">
-  <div class="t-head">
-    <div class="t-name" id="disp-name">Texas Hold'em Tournament</div>
-  </div>
-  <div class="t-main">
-    <div class="lvl-badge" id="lvl-badge">Level 1</div>
-    <div class="t-clock" id="t-clock">20:00</div>
-    <div class="blinds-wrap">
-      <div class="blinds-lbl" id="blinds-lbl">Blinds</div>
-      <div class="blinds-val" id="blinds-val">25 / 50</div>
-      <div class="ante-val" id="ante-val"></div>
+  <div class="t-layout">
+
+    <!-- LEFT: clock + controls -->
+    <div class="t-left">
+      <div class="t-head">
+        <div class="t-name" id="disp-name">Texas Hold'em Tournament</div>
+        <button class="btn-fs" id="btn-fs" onclick="toggleFullscreen()" title="Fullscreen">
+          <svg viewBox="0 0 24 24" fill="currentColor" id="fs-icon"><path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/></svg>
+        </button>
+      </div>
+      <div class="t-main">
+        <div class="lvl-badge" id="lvl-badge">Level 1</div>
+        <div class="t-clock" id="t-clock">20:00</div>
+        <div class="blinds-wrap">
+          <div class="blinds-lbl" id="blinds-lbl">Blinds</div>
+          <div class="blinds-val" id="blinds-val">25 / 50</div>
+          <div class="ante-val" id="ante-val"></div>
+        </div>
+        <div class="next-lbl" id="next-lbl">Next: 50 / 100</div>
+      </div>
+      <div class="t-controls">
+        <button class="btn-sec" onclick="prevLevel()">◀ Prev</button>
+        <button class="btn-play" id="btn-pp" onclick="toggleTimer()">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+        </button>
+        <button class="btn-sec" onclick="nextLevel()">Next ▶</button>
+        <button class="btn-mute" id="btn-mute" onclick="toggleMute()">
+          <svg viewBox="0 0 24 24" fill="currentColor" id="mute-svg">
+            <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="t-controls" style="padding-top:0;gap:10px;">
+        <button class="btn-sec" style="border-color:var(--gold);color:var(--gold);" onclick="resetLevel()">↺ Reset Level</button>
+        <button class="btn-sec" style="border-color:var(--red);color:var(--red);" onclick="confirmReset()">↺ Reset Tournament</button>
+      </div>
     </div>
-    <div class="next-lbl" id="next-lbl">Next: 50 / 100</div>
-  </div>
-  <div class="info-row">
-    <div class="icard">
-      <div class="icard-lbl">Players Left</div>
-      <div class="icard-val" id="t-players">—</div>
+
+    <!-- RIGHT: info + payouts (always visible in both orientations) -->
+    <div class="t-right">
+      <div class="info-row">
+        <div class="icard">
+          <div class="icard-lbl">Players Left</div>
+          <div class="icard-val" id="t-players">—</div>
+        </div>
+        <div class="icard">
+          <div class="icard-lbl">Prize Pool</div>
+          <div class="icard-val" id="t-pool">$0</div>
+        </div>
+      </div>
+      <div class="pay-section">
+        <div class="pay-hdr">Payouts</div>
+        <div id="t-payrows"></div>
+      </div>
     </div>
-    <div class="icard">
-      <div class="icard-lbl">Prize Pool</div>
-      <div class="icard-val" id="t-pool">$0</div>
-    </div>
-  </div>
-  <div class="pay-section">
-    <div class="pay-hdr">Payouts</div>
-    <div id="t-payrows"></div>
-  </div>
-  <div class="t-controls">
-    <button class="btn-sec" onclick="prevLevel()">◀ Prev</button>
-    <button class="btn-play" id="btn-pp" onclick="toggleTimer()">
-      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
-    </button>
-    <button class="btn-sec" onclick="nextLevel()">Next ▶</button>
-    <button class="btn-mute" id="btn-mute" onclick="toggleMute()">
-      <svg viewBox="0 0 24 24" fill="currentColor" id="mute-svg">
-        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
-      </svg>
-    </button>
-  </div>
-  <div class="t-controls" style="padding-top:0;gap:10px;">
-    <button class="btn-sec" style="border-color:var(--gold);color:var(--gold);" onclick="resetLevel()">↺ Reset Level</button>
-    <button class="btn-sec" style="border-color:var(--red);color:var(--red);" onclick="confirmReset()">↺ Reset Tournament</button>
+
   </div>
 </div>
 
@@ -636,7 +680,7 @@
 // CONSTANTS & DEFAULTS
 // ═══════════════════════════════════════════════════
 
-const VERSION = 'v0.7';
+const VERSION = 'v0.9';
 
 const DEFAULT_BLINDS = [
   {sb:25,  bb:50,   ante:0},
@@ -1036,6 +1080,30 @@ function resetLevel() {
   saveTimer();
   renderTimer();
   toast('Level timer reset');
+}
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+    const el = document.documentElement;
+    if (el.requestFullscreen) el.requestFullscreen();
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else toast('Use "Add to Home Screen" in Safari for fullscreen on iPhone');
+  } else {
+    if (document.exitFullscreen) document.exitFullscreen();
+    else if (document.webkitExitFullscreen) document.webkitExitFullscreen();
+  }
+}
+
+// Update fullscreen icon when state changes
+document.addEventListener('fullscreenchange', updateFsIcon);
+document.addEventListener('webkitfullscreenchange', updateFsIcon);
+function updateFsIcon() {
+  const inFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const icon = document.getElementById('fs-icon');
+  if (!icon) return;
+  icon.innerHTML = inFs
+    ? '<path d="M5 16h3v3h2v-5H5v2zm3-8H5v2h5V5H8v3zm6 11h2v-3h3v-2h-5v5zm2-11V5h-2v5h5V8h-3z"/>'
+    : '<path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z"/>';
 }
 
 function toggleMute() {

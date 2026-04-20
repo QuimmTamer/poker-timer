@@ -1,4 +1,4 @@
-const CACHE_NAME = 'poker-timer-v0.1';
+const CACHE_NAME = 'poker-timer-v0.7';
 const ASSETS = ['./', './index.html', './manifest.json', './icon.svg'];
 
 self.addEventListener('install', e => {

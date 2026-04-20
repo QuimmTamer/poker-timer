@@ -280,6 +280,10 @@
       </svg>
     </button>
   </div>
+  <div class="t-controls" style="padding-top:0;gap:10px;">
+    <button class="btn-sec" style="border-color:var(--gold);color:var(--gold);" onclick="resetLevel()">↺ Reset Level</button>
+    <button class="btn-sec" style="border-color:var(--red);color:var(--red);" onclick="confirmReset()">↺ Reset Tournament</button>
+  </div>
 </div>
 
 <!-- ═══════════ REGISTRATION TAB ═══════════ -->
@@ -851,6 +855,22 @@ function prevLevel() {
   }
   saveTimer();
   renderTimer();
+}
+
+function resetLevel() {
+  const wasRunning = T.running;
+  if (T.running) { T.running = false; cancelAnimationFrame(rafId); }
+  T.remSec = T.isBreak ? getBrkSec() : getLvlSec();
+  T.startTs = null;
+  w60 = false; w30 = false;
+  if (wasRunning) {
+    T.running = true;
+    T.startTs = Date.now();
+    rafId = requestAnimationFrame(tick);
+  }
+  saveTimer();
+  renderTimer();
+  toast('Level timer reset');
 }
 
 function toggleMute() {

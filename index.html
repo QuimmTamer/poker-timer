@@ -317,27 +317,48 @@
 
     /* ── LANDSCAPE: side-by-side ── */
     @media (orientation:landscape) and (max-height:600px){
+      /* Overall layout: left=clock, right=info+payouts */
       .t-layout{flex-direction:row;overflow:hidden;}
-      .t-left{flex:1;overflow-y:auto;border-right:1px solid var(--border);
-        padding-bottom:calc(var(--tab) + var(--safe));}
-      .t-right{width:220px;flex-shrink:0;overflow-y:auto;flex-direction:column;
-        display:flex;padding:8px 10px;gap:8px;
-        padding-bottom:calc(var(--tab) + var(--safe) + 8px);}
-      /* In landscape, info col and pay col stack vertically in t-right */
-      .t-right{grid-template-columns:unset;}
-      .t-info-col{flex-direction:row;}
-      .icard{min-height:60px;}
-      .pay-col{flex:1;}
-      .pay-entry{padding:6px 10px;}
-      .t-clock{font-size:clamp(42px,12vw,82px);}
-      .blinds-val{font-size:clamp(18px,5.5vw,40px);}
-      .t-main{gap:5px;padding:4px 12px;}
-      .t-head{padding:7px 44px 3px;}
-      .t-name{font-size:clamp(12px,2.8vw,20px);}
-      .t-controls{padding:3px 12px 6px;gap:8px;}
-      .btn-play{width:52px;height:52px;}
-      .btn-sec{height:36px;padding:0 12px;font-size:12px;}
-      .btn-mute{width:36px;height:36px;}
+      .t-left{flex:58;overflow-y:auto;border-right:1px solid var(--border);
+        min-width:0;padding-bottom:calc(var(--tab) + var(--safe) + 4px);}
+      /* Right column: flex column, not grid */
+      .t-right{flex:42;min-width:0;flex-shrink:0;display:flex!important;
+        flex-direction:column;grid-template-columns:unset;
+        padding:6px 10px calc(var(--tab) + var(--safe) + 8px);gap:6px;
+        overflow-y:auto;}
+      /* Info cards: row of 2 in landscape */
+      .t-info-col{flex-direction:row;flex-shrink:0;}
+      .icard{flex:1;padding:8px 6px;min-height:0;}
+      .icard-icon{font-size:16px;margin-bottom:2px;}
+      .icard-lbl{font-size:8px;}
+      .icard-val{font-size:clamp(16px,4vw,26px);}
+      /* Payout: fill remaining space */
+      .pay-col{flex:1;min-height:0;overflow:hidden;}
+      .pay-entries{overflow:hidden;}
+      .pay-hdr{padding:5px 10px;}
+      .pay-entry{padding:4px 10px;}
+      .pay-trophy{font-size:14px;}
+      .pay-place-name{font-size:10px;}
+      .pay-amt{font-size:clamp(13px,3.2vw,20px);}
+      .pay-pct{font-size:9px;}
+      /* Clock area: tighter */
+      .t-head{padding:5px 42px 2px;}
+      .t-name{font-size:clamp(11px,2.5vw,18px);}
+      .t-main{gap:3px;padding:2px 10px;justify-content:flex-start;}
+      .lvl-badge{padding:3px 14px;font-size:clamp(10px,2.2vw,14px);}
+      .t-clock{font-size:clamp(38px,11vw,72px);}
+      .blinds-lbl{font-size:9px;}
+      .blinds-val{font-size:clamp(16px,5vw,36px);}
+      .ante-val{font-size:clamp(11px,2vw,16px);}
+      .next-lbl{display:none;}
+      /* Controls: compact row */
+      .t-controls{padding:2px 10px 4px;gap:6px;flex-wrap:nowrap;}
+      .btn-play{width:46px;height:46px;flex-shrink:0;}
+      .btn-play svg{width:22px;height:22px;}
+      .btn-sec{height:34px;padding:0 10px;font-size:11px;flex-shrink:0;}
+      .btn-mute{width:34px;height:34px;flex-shrink:0;}
+      .btn-mute svg{width:16px;height:16px;}
+      .btn-fs{width:28px;height:28px;font-size:14px;}
     }
 
     /* ── TV / wide screen ── */
@@ -570,6 +591,17 @@
       </div>
     </div>
 
+    <div class="pre-save-box">
+      <div class="pre-save-hdr">📤 Share Presets Between Devices</div>
+      <div class="pre-save-body">
+        <div class="pre-hint">Export your saved presets to a file — share it via AirDrop, Messages, or email. Import a file shared by someone else to load their presets.</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="btn-pre-save" style="flex:1;" onclick="exportPresets()">📤 Export All Presets</button>
+          <button class="btn-pre-save" style="flex:1;background:var(--card2);border:2px solid var(--gold);" onclick="importPresets()">📥 Import Presets</button>
+        </div>
+      </div>
+    </div>
+
     <div class="pre-list-hdr" id="pre-list-hdr">Saved Tournaments</div>
     <div id="pre-list"></div>
 
@@ -720,7 +752,7 @@
 // CONSTANTS & DEFAULTS
 // ═══════════════════════════════════════════════════
 
-const VERSION = 'v1.0';
+const VERSION = 'v1.1';
 
 const DEFAULT_BLINDS = [
   {sb:25,  bb:50,   ante:0},
@@ -1661,6 +1693,70 @@ function deletePreset(id) {
   savePresetsStore(updated);
   toast(`"${preset.name}" deleted`);
   renderPresets();
+}
+
+function exportPresets() {
+  const presets = loadPresets();
+  if (presets.length === 0) { toast('No presets to export'); return; }
+  const json = JSON.stringify({ app: 'poker-timer', version: VERSION, presets }, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+
+  // iOS Safari: use Web Share API (shows AirDrop, Messages, etc.)
+  if (navigator.share && navigator.canShare) {
+    const file = new File([blob], 'poker-timer-presets.json', { type: 'application/json' });
+    if (navigator.canShare({ files: [file] })) {
+      navigator.share({ title: 'Poker Timer Presets', files: [file] }).catch(() => {});
+      return;
+    }
+  }
+  // Desktop / Android: trigger download
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'poker-timer-presets.json';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast(`Exported ${presets.length} preset${presets.length !== 1 ? 's' : ''}`);
+}
+
+function importPresets() {
+  const input = document.createElement('input');
+  input.type = 'file';
+  input.accept = '.json,application/json';
+  input.onchange = e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+      try {
+        const parsed = JSON.parse(e.target.result);
+        // Accept both wrapped { presets: [...] } and bare array formats
+        const incoming = Array.isArray(parsed) ? parsed : (parsed.presets || []);
+        if (!Array.isArray(incoming) || incoming.length === 0) throw new Error();
+        const existing = loadPresets();
+        let added = 0, skipped = 0;
+        incoming.forEach(p => {
+          if (!p.name || !p.settings) return;
+          if (existing.find(e => e.name.toLowerCase() === p.name.toLowerCase())) {
+            skipped++;
+          } else {
+            p.id = Date.now() + Math.random(); // ensure unique id
+            existing.unshift(p);
+            added++;
+          }
+        });
+        savePresetsStore(existing);
+        renderPresets();
+        toast(`✅ Imported ${added} preset${added !== 1 ? 's' : ''}${skipped ? ` (${skipped} duplicate${skipped !== 1 ? 's' : ''} skipped)` : ''}`);
+      } catch(err) {
+        toast('⚠️ Could not read file — is it a valid preset export?');
+      }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
 }
 
 function renderPresets() {

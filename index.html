@@ -464,6 +464,7 @@
     <div class="reg-stats">
       <div class="stat"><div class="stat-lbl">Entries</div><div class="stat-val" id="r-entries">0</div></div>
       <div class="stat"><div class="stat-lbl">Rebuys</div><div class="stat-val" id="r-rebuys">0</div></div>
+      <div class="stat"><div class="stat-lbl">Add-Ons</div><div class="stat-val" id="r-addons" style="color:var(--blue);">0</div></div>
       <div class="stat"><div class="stat-lbl">Active</div><div class="stat-val" id="r-active">0</div></div>
     </div>
   </div>
@@ -752,7 +753,7 @@
 // CONSTANTS & DEFAULTS
 // ═══════════════════════════════════════════════════
 
-const VERSION = 'v1.1';
+const VERSION = 'v1.2';
 
 const DEFAULT_BLINDS = [
   {sb:25,  bb:50,   ante:0},
@@ -1205,6 +1206,7 @@ function getPayouts(pool) {
 function activePlayers()    { return P.filter(p => !p.elim).length; }
 function boughtInPlayers()  { return P.filter(p => p.buyIn).length; }
 function totalRebuys()      { return P.reduce((s,p) => s + p.rebuys, 0); }
+function totalAddons()      { return P.reduce((s,p) => s + p.addons, 0); }
 
 // ═══════════════════════════════════════════════════
 // FORMATTERS
@@ -1335,6 +1337,7 @@ function renderReg() {
   document.getElementById('r-pool').textContent = fmtMoney(pool);
   document.getElementById('r-entries').textContent = boughtInPlayers();
   document.getElementById('r-rebuys').textContent = totalRebuys();
+  document.getElementById('r-addons').textContent = totalAddons();
   document.getElementById('r-active').textContent = activePlayers();
   document.getElementById('plyr-count').textContent = P.length;
   renderPlayersList();
@@ -1361,11 +1364,19 @@ function renderPlayersList() {
       <div class="plyr-acts">
         ${p.buyIn ? `
         <div class="rbuy-grp">
-          <div class="rbuy-lbl">Rebuy</div>
+          <div class="rbuy-lbl">Rebuy $${S.rebuy}</div>
           <div class="rbuy-row">
             <button class="btn-rb" onclick="adjRebuy(${p.id},-1)">−</button>
             <span class="rb-val">${p.rebuys}</span>
             <button class="btn-rb" ${rebuyClosed?'disabled style="opacity:.4"':''} onclick="adjRebuy(${p.id},1)">+</button>
+          </div>
+        </div>
+        <div class="rbuy-grp" style="border:1px solid var(--blue);">
+          <div class="rbuy-lbl" style="color:var(--blue);">Add-On $${S.addon}</div>
+          <div class="rbuy-row">
+            <button class="btn-rb" onclick="adjAddon(${p.id},-1)">−</button>
+            <span class="rb-val" style="color:var(--blue);">${p.addons}</span>
+            <button class="btn-rb" onclick="adjAddon(${p.id},1)">+</button>
           </div>
         </div>` : ''}
         <button class="btn-bi${p.buyIn?' on':''}" onclick="toggleBuyIn(${p.id})">
@@ -1556,6 +1567,16 @@ function adjRebuy(id, delta) {
   savePlayers();
   renderReg();
   renderTimer();
+}
+
+function adjAddon(id, delta) {
+  const p = P.find(p => p.id === id);
+  if (!p || !p.buyIn) return;
+  p.addons = Math.max(0, p.addons + delta);
+  savePlayers();
+  renderReg();
+  renderTimer();
+  if (delta > 0) toast(`Add-on recorded — $${S.addon} added to prize pool`);
 }
 
 function toggleElim(id) {

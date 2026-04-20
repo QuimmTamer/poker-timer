@@ -44,63 +44,91 @@
     .tbtn svg{width:22px;height:22px;}
 
     /* ── TIMER TAB ── */
-    #p-timer{background:linear-gradient(170deg,var(--bg) 0%,#081008 100%);}
-    .t-head{text-align:center;padding:clamp(12px,3vw,24px) 16px 4px;}
-    .t-name{font-size:clamp(16px,4vw,36px);font-weight:800;color:var(--gold);
-      letter-spacing:.06em;text-transform:uppercase;line-height:1.2;}
+    #p-timer{background:linear-gradient(170deg,var(--bg) 0%,#060e07 100%);}
+    .t-layout{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+    .t-left{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden;}
+    .t-right{display:grid;grid-template-columns:1fr 1.4fr;gap:8px;padding:8px 14px 4px;}
+
+    /* Header */
+    .t-head{position:relative;text-align:center;padding:clamp(10px,2.5vw,20px) 48px 4px;}
+    .t-name{font-size:clamp(14px,3.5vw,32px);font-weight:900;color:var(--gold);
+      letter-spacing:.07em;text-transform:uppercase;line-height:1.2;}
+    .btn-fs{position:absolute;right:12px;top:50%;transform:translateY(-50%);
+      width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+      background:var(--card);color:var(--txt2);cursor:pointer;display:flex;
+      align-items:center;justify-content:center;font-size:16px;transition:all .2s;}
+    .btn-fs:active{background:var(--card2);}
+
+    /* Clock section */
     .t-main{flex:1;display:flex;flex-direction:column;align-items:center;
-      justify-content:center;padding:8px 16px;gap:clamp(8px,2vw,16px);}
+      justify-content:center;padding:4px 16px;gap:clamp(6px,1.5vw,14px);min-height:0;}
     .lvl-badge{background:var(--card);border:2px solid var(--gold);border-radius:50px;
-      padding:5px 20px;font-size:clamp(13px,3vw,20px);font-weight:800;
-      letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+      padding:4px 22px;font-size:clamp(12px,2.8vw,18px);font-weight:800;
+      letter-spacing:.14em;text-transform:uppercase;color:var(--gold);}
     .lvl-badge.brk{border-color:var(--blue);color:var(--blue);}
-    .t-clock{font-size:clamp(72px,22vw,180px);font-weight:900;
+    .t-clock{font-size:clamp(64px,19vw,160px);font-weight:900;
       font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-3px;
-      color:var(--txt);text-shadow:0 0 50px rgba(201,168,76,.25);}
+      color:var(--txt);text-shadow:0 0 60px rgba(201,168,76,.2);}
     .t-clock.warn{color:#ff6b35;text-shadow:0 0 50px rgba(255,107,53,.5);
       animation:pulse 1s ease-in-out infinite;}
     .t-clock.brk{color:var(--blue);text-shadow:0 0 50px rgba(52,152,219,.35);}
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.65}}
-    .blinds-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
-    .blinds-lbl{font-size:clamp(10px,2vw,14px);color:var(--muted);
-      text-transform:uppercase;letter-spacing:.1em;}
-    .blinds-val{font-size:clamp(30px,9vw,80px);font-weight:900;color:var(--gold);
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+    .blinds-wrap{display:flex;flex-direction:column;align-items:center;gap:1px;}
+    .blinds-lbl{font-size:clamp(10px,1.8vw,13px);color:var(--muted);
+      text-transform:uppercase;letter-spacing:.12em;}
+    .blinds-val{font-size:clamp(28px,8vw,72px);font-weight:900;color:var(--gold);
       letter-spacing:-1px;line-height:1;}
-    .ante-val{font-size:clamp(14px,3vw,24px);color:var(--txt2);font-weight:600;}
-    .next-lbl{font-size:clamp(11px,2.5vw,18px);color:var(--muted);}
-    .t-controls{display:flex;gap:12px;align-items:center;justify-content:center;
-      padding:4px 16px 12px;flex-wrap:wrap;}
-    .btn-play{width:clamp(64px,14vw,80px);height:clamp(64px,14vw,80px);
+    .ante-val{font-size:clamp(13px,2.5vw,20px);color:var(--txt2);font-weight:600;}
+    .next-lbl{font-size:clamp(11px,2vw,16px);color:var(--muted);}
+
+    /* Controls */
+    .t-controls{display:flex;gap:10px;align-items:center;justify-content:center;
+      padding:4px 14px 8px;flex-wrap:wrap;}
+    .btn-play{width:clamp(58px,13vw,74px);height:clamp(58px,13vw,74px);
       border-radius:50%;border:none;background:var(--gold);color:var(--bg);
       cursor:pointer;display:flex;align-items:center;justify-content:center;
-      transition:transform .1s;box-shadow:0 4px 24px rgba(201,168,76,.45);}
+      transition:transform .1s;box-shadow:0 4px 24px rgba(201,168,76,.5);}
     .btn-play:active{transform:scale(.93);}
-    .btn-play svg{width:clamp(28px,7vw,38px);height:clamp(28px,7vw,38px);}
-    .btn-sec{height:44px;border-radius:22px;border:2px solid var(--border);
+    .btn-play svg{width:clamp(26px,6vw,34px);height:clamp(26px,6vw,34px);}
+    .btn-sec{height:40px;border-radius:20px;border:2px solid var(--border);
       background:var(--card);color:var(--txt);cursor:pointer;
-      padding:0 18px;font-size:14px;font-weight:700;transition:background .15s;}
+      padding:0 16px;font-size:13px;font-weight:700;transition:background .15s;}
     .btn-sec:active{background:var(--card2);}
-    .btn-mute{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);
+    .btn-mute{width:40px;height:40px;border-radius:50%;border:2px solid var(--border);
       background:var(--card);color:var(--txt2);cursor:pointer;
       display:flex;align-items:center;justify-content:center;transition:all .2s;}
-    .btn-mute svg{width:20px;height:20px;}
+    .btn-mute svg{width:18px;height:18px;}
     .btn-mute.off{color:var(--red);border-color:var(--red);}
-    .info-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 8px;}
+
+    /* Info cards (players left + prize pool) — left side of t-right */
+    .t-info-col{display:flex;flex-direction:column;gap:8px;}
     .icard{background:var(--card);border:1px solid var(--border);border-radius:12px;
-      padding:10px;text-align:center;}
-    .icard-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;
-      letter-spacing:.08em;margin-bottom:3px;}
-    .icard-val{font-size:clamp(18px,5vw,32px);font-weight:800;color:var(--green);}
-    .pay-section{margin:0 16px 10px;background:var(--card);
+      padding:12px 10px;text-align:center;flex:1;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;}
+    .icard-icon{font-size:22px;margin-bottom:4px;}
+    .icard-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:4px;}
+    .icard-val{font-size:clamp(22px,5vw,36px);font-weight:900;color:var(--green);line-height:1;}
+
+    /* Payout table — right side of t-right */
+    .pay-col{display:flex;flex-direction:column;background:var(--card);
       border:1px solid var(--border);border-radius:14px;overflow:hidden;}
-    .pay-hdr{background:var(--card2);padding:6px 14px;font-size:11px;
-      font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
-    .pay-row{display:flex;justify-content:space-between;align-items:center;
-      padding:7px 14px;border-top:1px solid var(--border);}
-    .pay-place{font-size:13px;font-weight:700;color:var(--txt2);}
+    .pay-hdr{background:linear-gradient(135deg,#1e3a1e,#2a4a2a);
+      padding:8px 12px;text-align:center;border-bottom:1px solid var(--border);}
+    .pay-hdr-text{font-size:11px;font-weight:800;color:var(--gold);
+      text-transform:uppercase;letter-spacing:.15em;}
+    .pay-entries{flex:1;display:flex;flex-direction:column;}
+    .pay-entry{flex:1;display:flex;align-items:center;justify-content:space-between;
+      padding:8px 12px;border-top:1px solid var(--border);}
+    .pay-entry:first-child{border-top:none;}
+    .pay-entry-left{display:flex;align-items:center;gap:7px;}
+    .pay-trophy{font-size:clamp(16px,3.5vw,24px);}
+    .pay-place-name{font-size:clamp(10px,2vw,13px);font-weight:800;
+      text-transform:uppercase;letter-spacing:.06em;}
     .pay-p1{color:#FFD700;}.pay-p2{color:#C0C0C0;}.pay-p3{color:#CD7F32;}
-    .pay-amt{font-size:clamp(15px,4vw,20px);font-weight:800;}
-    .pay-pct{font-size:11px;color:var(--muted);margin-left:4px;}
+    .pay-entry-right{text-align:right;}
+    .pay-amt{display:block;font-size:clamp(16px,4vw,26px);font-weight:900;line-height:1.1;}
+    .pay-pct{font-size:10px;color:var(--muted);font-weight:600;}
 
     /* ── REGISTRATION TAB ── */
     .reg-head{padding:14px 16px;background:var(--card);border-bottom:1px solid var(--border);}
@@ -287,32 +315,36 @@
     .btn-fs:active{background:var(--card2);}
     .t-head{position:relative;}
 
-    /* ── LANDSCAPE TWO-COLUMN LAYOUT ── */
-    .t-layout{display:flex;flex-direction:column;flex:1;min-height:0;}
-    .t-left{display:flex;flex-direction:column;flex:1;min-height:0;}
-    .t-right{display:flex;flex-direction:column;}
-
+    /* ── LANDSCAPE: side-by-side ── */
     @media (orientation:landscape) and (max-height:600px){
-      #p-timer{flex-direction:column;}
-      .t-layout{flex-direction:row;overflow:hidden;flex:1;}
-      .t-left{flex:1;overflow-y:auto;border-right:1px solid var(--border);min-width:0;}
-      .t-right{width:260px;overflow-y:auto;flex-shrink:0;
-        padding-bottom:calc(var(--tab) + var(--safe) + 4px);}
-      .t-clock{font-size:clamp(44px,13vw,88px);}
-      .blinds-val{font-size:clamp(20px,6vw,44px);}
-      .t-main{gap:6px;padding:6px 12px;}
-      .t-head{padding:8px 12px 4px;}
-      .t-name{font-size:clamp(13px,3vw,22px);}
-      .info-row{grid-template-columns:1fr 1fr;padding:8px 10px 6px;}
-      .pay-section{margin:0 10px 8px;}
-      .t-controls{padding:4px 10px 6px;}
+      .t-layout{flex-direction:row;overflow:hidden;}
+      .t-left{flex:1;overflow-y:auto;border-right:1px solid var(--border);
+        padding-bottom:calc(var(--tab) + var(--safe));}
+      .t-right{width:220px;flex-shrink:0;overflow-y:auto;flex-direction:column;
+        display:flex;padding:8px 10px;gap:8px;
+        padding-bottom:calc(var(--tab) + var(--safe) + 8px);}
+      /* In landscape, info col and pay col stack vertically in t-right */
+      .t-right{grid-template-columns:unset;}
+      .t-info-col{flex-direction:row;}
+      .icard{min-height:60px;}
+      .pay-col{flex:1;}
+      .pay-entry{padding:6px 10px;}
+      .t-clock{font-size:clamp(42px,12vw,82px);}
+      .blinds-val{font-size:clamp(18px,5.5vw,40px);}
+      .t-main{gap:5px;padding:4px 12px;}
+      .t-head{padding:7px 44px 3px;}
+      .t-name{font-size:clamp(12px,2.8vw,20px);}
+      .t-controls{padding:3px 12px 6px;gap:8px;}
+      .btn-play{width:52px;height:52px;}
+      .btn-sec{height:36px;padding:0 12px;font-size:12px;}
+      .btn-mute{width:36px;height:36px;}
     }
 
-    /* ── RESPONSIVE / TV ── */
+    /* ── TV / wide screen ── */
     @media(min-width:700px){
-      .info-row{grid-template-columns:repeat(4,1fr);}
       .reg-stats{grid-template-columns:repeat(4,1fr);}
       .t-main{gap:20px;}
+      .pay-amt{font-size:clamp(20px,3vw,32px);}
     }
 
     /* ── TOAST ── */
@@ -336,7 +368,7 @@
 <div id="p-timer" class="panel active">
   <div class="t-layout">
 
-    <!-- LEFT: clock + controls -->
+    <!-- LEFT: clock + blinds + controls -->
     <div class="t-left">
       <div class="t-head">
         <div class="t-name" id="disp-name">Texas Hold'em Tournament</div>
@@ -366,30 +398,38 @@
           </svg>
         </button>
       </div>
-      <div class="t-controls" style="padding-top:0;gap:10px;">
+      <div class="t-controls" style="padding-top:0;gap:8px;">
         <button class="btn-sec" style="border-color:var(--gold);color:var(--gold);" onclick="resetLevel()">↺ Reset Level</button>
         <button class="btn-sec" style="border-color:var(--red);color:var(--red);" onclick="confirmReset()">↺ Reset Tournament</button>
       </div>
     </div>
 
-    <!-- RIGHT: info + payouts (always visible in both orientations) -->
+    <!-- RIGHT: Players Left + Prize Pool (left), Payout table (right) -->
     <div class="t-right">
-      <div class="info-row">
+
+      <!-- Info column -->
+      <div class="t-info-col">
         <div class="icard">
+          <div class="icard-icon">👥</div>
           <div class="icard-lbl">Players Left</div>
           <div class="icard-val" id="t-players">—</div>
         </div>
         <div class="icard">
+          <div class="icard-icon">💰</div>
           <div class="icard-lbl">Prize Pool</div>
           <div class="icard-val" id="t-pool">$0</div>
         </div>
       </div>
-      <div class="pay-section">
-        <div class="pay-hdr">Payouts</div>
-        <div id="t-payrows"></div>
-      </div>
-    </div>
 
+      <!-- Payout column -->
+      <div class="pay-col">
+        <div class="pay-hdr">
+          <div class="pay-hdr-text">♠ Payouts</div>
+        </div>
+        <div class="pay-entries" id="t-payrows"></div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -680,7 +720,7 @@
 // CONSTANTS & DEFAULTS
 // ═══════════════════════════════════════════════════
 
-const VERSION = 'v0.9';
+const VERSION = 'v1.0';
 
 const DEFAULT_BLINDS = [
   {sb:25,  bb:50,   ante:0},
@@ -1227,16 +1267,21 @@ function renderTimer() {
   const pool = getPrizePool();
   document.getElementById('t-pool').textContent = fmtMoney(pool);
 
-  // Payout rows — always visible
+  // Payout entries — always visible, trophy-styled
   const payRows = document.getElementById('t-payrows');
   const payouts = getPayouts(pool);
+  const trophies = ['🥇','🥈','🥉','🏅','🏅','🏅','🏅','🏅','🏅'];
+  const placeNames = ['1st Place','2nd Place','3rd Place','4th','5th','6th','7th','8th','9th'];
   payRows.innerHTML = S.payPct.slice(0, S.payPlaces).map((pct, i) =>
-    `<div class="pay-row">
-      <span class="pay-place ${placeCls(i)}">${placeLabel(i)}</span>
-      <span>
-        <span class="pay-amt">${pool > 0 ? fmtMoney(payouts[i]) : '—'}</span>
+    `<div class="pay-entry">
+      <div class="pay-entry-left">
+        <span class="pay-trophy">${trophies[i]}</span>
+        <span class="pay-place-name ${placeCls(i)}">${placeNames[i]}</span>
+      </div>
+      <div class="pay-entry-right">
+        <span class="pay-amt ${placeCls(i)}">${pool > 0 ? fmtMoney(payouts[i]) : '—'}</span>
         <span class="pay-pct">${pct}%</span>
-      </span>
+      </div>
     </div>`
   ).join('');
 }

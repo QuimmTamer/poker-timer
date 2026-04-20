@@ -717,6 +717,87 @@
       </div>
     </div>
 
+    <div class="inst-sec" style="border-color:rgba(201,168,76,.35);">
+      <div class="inst-hdr" style="background:linear-gradient(135deg,#1e1a0a,#2a2510);color:var(--gold);">
+        ⚖️ Legal Notice &amp; Terms of Use
+      </div>
+      <div class="inst-body" style="font-size:13px;color:var(--txt2);line-height:1.75;">
+
+        <p style="margin-bottom:12px;">
+          <strong>Poker Tournament Timer</strong> (the "Application") is the sole intellectual
+          property of <strong style="color:var(--gold);">David C. Arnell</strong> (the "Owner").
+          All rights reserved.
+        </p>
+
+        <p style="margin-bottom:12px;">
+          By accessing, installing, or using this Application in any capacity, you (the "User")
+          acknowledge that you have read, understood, and <strong>unconditionally agree</strong>
+          to the following terms and conditions:
+        </p>
+
+        <ol style="padding-left:18px;display:flex;flex-direction:column;gap:10px;margin-bottom:14px;">
+          <li>
+            <strong>Ownership.</strong> This Application, including all source code, design,
+            graphics, logic, and content, is and shall remain the exclusive intellectual property
+            of David C. Arnell. No ownership rights are transferred to the User under any
+            circumstances.
+          </li>
+          <li>
+            <strong>Personal Use Only.</strong> This Application is licensed for personal,
+            non-commercial use only. Use of this Application for any commercial purpose —
+            including but not limited to charging admission, operating paid events, or
+            incorporating this Application into a commercial product or service — is strictly
+            prohibited without prior written agreement from the Owner.
+          </li>
+          <li>
+            <strong>No Redistribution.</strong> The User may not copy, reproduce, distribute,
+            publish, sublicense, sell, or otherwise transfer this Application or any portion
+            thereof to any third party without explicit written consent from the Owner.
+          </li>
+          <li>
+            <strong>No Modification or Reverse Engineering.</strong> The User may not modify,
+            adapt, translate, decompile, disassemble, or create derivative works based on this
+            Application without express written permission from the Owner.
+          </li>
+          <li>
+            <strong>No Warranty.</strong> This Application is provided "as is" without warranty
+            of any kind, express or implied. The Owner makes no representations regarding
+            accuracy, reliability, or fitness for a particular purpose. The User assumes all
+            risk associated with use of this Application.
+          </li>
+          <li>
+            <strong>Limitation of Liability.</strong> Under no circumstances shall the Owner be
+            liable for any direct, indirect, incidental, or consequential damages arising from
+            the use or inability to use this Application.
+          </li>
+          <li>
+            <strong>Governing Agreement.</strong> Any commercial licensing, partnership, or
+            distribution arrangement must be established through a signed written agreement
+            between the User and the Owner prior to any such use.
+          </li>
+          <li>
+            <strong>Acceptance.</strong> Continued use of this Application constitutes full
+            and binding acceptance of these terms. If you do not agree to these terms, you
+            must discontinue use of the Application immediately.
+          </li>
+        </ol>
+
+        <p style="margin-bottom:10px;">
+          For licensing inquiries or written agreements, contact the Owner at:<br>
+          <a href="mailto:davidarnell85@gmail.com" style="font-weight:700;font-size:14px;">
+            davidarnell85@gmail.com
+          </a>
+        </p>
+
+        <p style="font-size:11px;color:var(--muted);border-top:1px solid var(--border);padding-top:10px;margin-top:4px;">
+          © <span id="copy-year"></span> David C. Arnell. All rights reserved.
+          Poker Tournament Timer is an original work. Unauthorized commercial use or
+          distribution is a violation of these terms and applicable intellectual property law.
+        </p>
+
+      </div>
+    </div>
+
     <div class="ver" id="ver-badge">Poker Tournament Timer v0.1 &nbsp;♠♥♦♣</div>
   </div>
 </div>
@@ -753,7 +834,7 @@
 // CONSTANTS & DEFAULTS
 // ═══════════════════════════════════════════════════
 
-const VERSION = 'v1.2';
+const VERSION = 'v1.3';
 
 const DEFAULT_BLINDS = [
   {sb:25,  bb:50,   ante:0},
@@ -1888,6 +1969,7 @@ function init() {
   // Version display
   document.getElementById('ver-disp').textContent = VERSION;
   document.getElementById('ver-badge').textContent = `Poker Tournament Timer ${VERSION}  ♠♥♦♣`;
+  document.getElementById('copy-year').textContent = new Date().getFullYear();
 }
 
 window.addEventListener('load', init);

@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Poker Timer">
+  <meta name="theme-color" content="#0d1b0f">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>Poker Timer</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#0d1b0f;--bg2:#162318;--card:#1e3326;--card2:#243d2e;
+      --gold:#c9a84c;--gold2:#e8c96a;--green:#2ecc71;--red:#e74c3c;
+      --blue:#3498db;--txt:#f0f0f0;--txt2:#a0b0a8;--muted:#607060;
+      --border:#2a4030;--tab:68px;--safe:env(safe-area-inset-bottom,0px);
+    }
+    html,body{height:100%;overflow:hidden;background:var(--bg);color:var(--txt);
+      font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      -webkit-tap-highlight-color:transparent;}
+    #app{display:flex;flex-direction:column;height:100dvh;height:-webkit-fill-available;}
+
+    /* ── TAB PANELS ── */
+    .panel{display:none;flex:1;overflow-y:auto;overflow-x:hidden;
+      -webkit-overflow-scrolling:touch;
+      padding-bottom:calc(var(--tab) + var(--safe) + 8px);}
+    .panel.active{display:flex;flex-direction:column;}
+
+    /* ── TAB BAR ── */
+    #tabbar{position:fixed;bottom:0;left:0;right:0;
+      height:calc(var(--tab) + var(--safe));padding-bottom:var(--safe);
+      background:rgba(13,27,15,.96);backdrop-filter:blur(12px);
+      -webkit-backdrop-filter:blur(12px);display:flex;
+      border-top:1px solid var(--border);z-index:200;}
+    .tbtn{flex:1;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;gap:3px;background:none;border:none;
+      color:var(--muted);cursor:pointer;font-size:10px;font-weight:600;
+      letter-spacing:.03em;text-transform:uppercase;padding:6px 0;
+      transition:color .2s;}
+    .tbtn.active{color:var(--gold);}
+    .tbtn svg{width:22px;height:22px;}
+
+    /* ── TIMER TAB ── */
+    #p-timer{background:linear-gradient(170deg,var(--bg) 0%,#081008 100%);}
+    .t-head{text-align:center;padding:clamp(12px,3vw,24px) 16px 4px;}
+    .t-name{font-size:clamp(16px,4vw,36px);font-weight:800;color:var(--gold);
+      letter-spacing:.06em;text-transform:uppercase;line-height:1.2;}
+    .t-main{flex:1;display:flex;flex-direction:column;align-items:center;
+      justify-content:center;padding:8px 16px;gap:clamp(8px,2vw,16px);}
+    .lvl-badge{background:var(--card);border:2px solid var(--gold);border-radius:50px;
+      padding:5px 20px;font-size:clamp(13px,3vw,20px);font-weight:800;
+      letter-spacing:.12em;text-transform:uppercase;color:var(--gold);}
+    .lvl-badge.brk{border-color:var(--blue);color:var(--blue);}
+    .t-clock{font-size:clamp(72px,22vw,180px);font-weight:900;
+      font-variant-numeric:tabular-nums;line-height:1;letter-spacing:-3px;
+      color:var(--txt);text-shadow:0 0 50px rgba(201,168,76,.25);}
+    .t-clock.warn{color:#ff6b35;text-shadow:0 0 50px rgba(255,107,53,.5);
+      animation:pulse 1s ease-in-out infinite;}
+    .t-clock.brk{color:var(--blue);text-shadow:0 0 50px rgba(52,152,219,.35);}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.65}}
+    .blinds-wrap{display:flex;flex-direction:column;align-items:center;gap:2px;}
+    .blinds-lbl{font-size:clamp(10px,2vw,14px);color:var(--muted);
+      text-transform:uppercase;letter-spacing:.1em;}
+    .blinds-val{font-size:clamp(30px,9vw,80px);font-weight:900;color:var(--gold);
+      letter-spacing:-1px;line-height:1;}
+    .ante-val{font-size:clamp(14px,3vw,24px);color:var(--txt2);font-weight:600;}
+    .next-lbl{font-size:clamp(11px,2.5vw,18px);color:var(--muted);}
+    .t-controls{display:flex;gap:12px;align-items:center;justify-content:center;
+      padding:4px 16px 12px;flex-wrap:wrap;}
+    .btn-play{width:clamp(64px,14vw,80px);height:clamp(64px,14vw,80px);
+      border-radius:50%;border:none;background:var(--gold);color:var(--bg);
+      cursor:pointer;display:flex;align-items:center;justify-content:center;
+      transition:transform .1s;box-shadow:0 4px 24px rgba(201,168,76,.45);}
+    .btn-play:active{transform:scale(.93);}
+    .btn-play svg{width:clamp(28px,7vw,38px);height:clamp(28px,7vw,38px);}
+    .btn-sec{height:44px;border-radius:22px;border:2px solid var(--border);
+      background:var(--card);color:var(--txt);cursor:pointer;
+      padding:0 18px;font-size:14px;font-weight:700;transition:background .15s;}
+    .btn-sec:active{background:var(--card2);}
+    .btn-mute{width:44px;height:44px;border-radius:50%;border:2px solid var(--border);
+      background:var(--card);color:var(--txt2);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:all .2s;}
+    .btn-mute svg{width:20px;height:20px;}
+    .btn-mute.off{color:var(--red);border-color:var(--red);}
+    .info-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:0 16px 8px;}
+    .icard{background:var(--card);border:1px solid var(--border);border-radius:12px;
+      padding:10px;text-align:center;}
+    .icard-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.08em;margin-bottom:3px;}
+    .icard-val{font-size:clamp(18px,5vw,32px);font-weight:800;color:var(--green);}
+    .pay-section{margin:0 16px 12px;background:var(--card);
+      border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+    .pay-hdr{background:var(--card2);padding:8px 14px;font-size:11px;
+      font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .pay-row{display:flex;justify-content:space-between;align-items:center;
+      padding:9px 14px;border-top:1px solid var(--border);}
+    .pay-place{font-size:14px;font-weight:700;color:var(--txt2);}
+    .pay-p1{color:#FFD700;}.pay-p2{color:#C0C0C0;}.pay-p3{color:#CD7F32;}
+    .pay-amt{font-size:clamp(16px,4vw,22px);font-weight:800;}
+    .pay-pct{font-size:11px;color:var(--muted);margin-left:4px;}
+
+    /* ── REGISTRATION TAB ── */
+    .reg-head{padding:14px 16px;background:var(--card);border-bottom:1px solid var(--border);}
+    .pool-wrap{text-align:center;margin-bottom:12px;}
+    .pool-lbl{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;}
+    .pool-val{font-size:clamp(40px,10vw,72px);font-weight:900;color:var(--green);line-height:1.1;}
+    .reg-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+    .stat{text-align:center;background:var(--bg2);border-radius:8px;padding:8px 4px;}
+    .stat-lbl{font-size:10px;color:var(--muted);text-transform:uppercase;}
+    .stat-val{font-size:22px;font-weight:800;}
+    .plyr-count-bar{display:flex;align-items:center;justify-content:space-between;
+      padding:12px 16px;background:var(--card);border-bottom:1px solid var(--border);}
+    .cnt-ctrl{display:flex;align-items:center;gap:12px;}
+    .btn-cnt{width:36px;height:36px;border-radius:50%;border:2px solid var(--gold);
+      background:none;color:var(--gold);font-size:22px;font-weight:700;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;transition:background .15s;}
+    .btn-cnt:active{background:rgba(201,168,76,.2);}
+    .cnt-val{font-size:20px;font-weight:700;min-width:28px;text-align:center;}
+    .plyr-card{display:flex;align-items:center;gap:8px;padding:9px 14px;
+      border-bottom:1px solid var(--border);background:var(--bg);transition:background .2s;}
+    .plyr-card.out{opacity:.45;background:var(--bg2);}
+    .plyr-card.in{border-left:3px solid var(--green);}
+    .plyr-num{font-size:12px;font-weight:700;color:var(--muted);min-width:22px;text-align:center;}
+    .plyr-info{flex:1;min-width:0;}
+    .plyr-name{background:none;border:none;color:var(--txt);font-size:16px;
+      font-weight:600;width:100%;padding:0;}
+    .plyr-name:focus{outline:none;color:var(--gold);}
+    .plyr-name.out{text-decoration:line-through;color:var(--muted);}
+    .plyr-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .plyr-acts{display:flex;align-items:center;gap:5px;flex-shrink:0;}
+    .rbuy-grp{display:flex;flex-direction:column;align-items:center;
+      background:var(--card);border-radius:8px;padding:3px 6px;}
+    .rbuy-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;}
+    .rbuy-row{display:flex;align-items:center;gap:3px;}
+    .btn-rb{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);
+      background:var(--bg2);color:var(--txt);font-size:16px;font-weight:700;
+      cursor:pointer;display:flex;align-items:center;justify-content:center;}
+    .btn-rb:active{background:var(--card2);}
+    .rb-val{font-size:16px;font-weight:700;min-width:18px;text-align:center;}
+    .btn-bi{height:34px;border-radius:8px;border:2px solid var(--border);
+      background:none;color:var(--muted);font-size:11px;font-weight:700;
+      cursor:pointer;padding:0 7px;transition:all .2s;white-space:nowrap;}
+    .btn-bi.on{border-color:var(--green);color:var(--green);
+      background:rgba(46,204,113,.1);}
+    .btn-elim{width:30px;height:30px;border-radius:50%;border:1px solid var(--border);
+      background:none;color:var(--muted);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:13px;transition:all .2s;}
+    .btn-elim.on{background:rgba(231,76,60,.2);border-color:var(--red);color:var(--red);}
+
+    /* ── SETTINGS TAB ── */
+    .set-wrap{padding:14px;display:flex;flex-direction:column;gap:14px;}
+    .set-sec{background:var(--card);border:1px solid var(--border);
+      border-radius:14px;overflow:hidden;}
+    .set-hdr{background:var(--card2);padding:10px 14px;font-size:12px;
+      font-weight:800;color:var(--gold);text-transform:uppercase;letter-spacing:.1em;}
+    .set-row{display:flex;align-items:center;padding:11px 14px;
+      border-top:1px solid var(--border);gap:10px;}
+    .set-lbl{flex:1;font-size:15px;font-weight:500;}
+    .set-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+    .sinput{background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+      color:var(--txt);padding:8px 10px;font-size:15px;width:110px;text-align:right;}
+    .sinput.full{width:100%;text-align:left;}
+    .sinput:focus{outline:none;border-color:var(--gold);}
+    .toggle{position:relative;width:50px;height:28px;flex-shrink:0;}
+    .toggle input{opacity:0;width:0;height:0;}
+    .tslider{position:absolute;inset:0;background:var(--muted);border-radius:28px;
+      cursor:pointer;transition:background .2s;}
+    .tslider::before{content:'';position:absolute;width:22px;height:22px;
+      left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;}
+    .toggle input:checked+.tslider{background:var(--green);}
+    .toggle input:checked+.tslider::before{transform:translateX(22px);}
+    .blind-tbl-hdr{display:grid;grid-template-columns:36px 1fr 1fr 1fr 34px;
+      gap:4px;padding:7px 12px;background:var(--bg2);
+      font-size:10px;color:var(--muted);text-transform:uppercase;
+      letter-spacing:.05em;text-align:center;}
+    .blind-row{display:grid;grid-template-columns:36px 1fr 1fr 1fr 34px;
+      gap:4px;padding:5px 12px;border-top:1px solid var(--border);align-items:center;}
+    .blind-row-lv{font-size:12px;font-weight:700;color:var(--muted);text-align:center;}
+    .blind-row input{background:var(--bg2);border:1px solid var(--border);
+      border-radius:6px;color:var(--txt);padding:5px 3px;font-size:13px;
+      text-align:center;width:100%;}
+    .blind-row input:focus{outline:none;border-color:var(--gold);}
+    .btn-rm-lv{width:26px;height:26px;border-radius:50%;border:1px solid var(--border);
+      background:var(--bg2);color:var(--red);cursor:pointer;
+      display:flex;align-items:center;justify-content:center;font-size:16px;}
+    .btn-add-lv{width:calc(100% - 24px);margin:7px 12px;padding:9px;
+      border:1px dashed var(--border);background:none;color:var(--gold);
+      cursor:pointer;font-size:13px;font-weight:700;border-radius:8px;
+      transition:background .15s;}
+    .btn-add-lv:active{background:var(--card2);}
+    .pay-set-row{display:grid;grid-template-columns:90px 1fr 70px;
+      gap:8px;align-items:center;padding:8px 14px;border-top:1px solid var(--border);}
+    .pay-set-place{font-size:14px;font-weight:700;}
+    .btn-save{background:var(--gold);color:var(--bg);border:none;
+      border-radius:12px;padding:15px;font-size:16px;font-weight:800;
+      cursor:pointer;width:100%;transition:opacity .15s;}
+    .btn-save:active{opacity:.8;}
+    .btn-danger{background:rgba(231,76,60,.1);color:var(--red);
+      border:1px solid var(--red);border-radius:12px;padding:13px;
+      font-size:14px;font-weight:700;cursor:pointer;width:100%;transition:background .15s;}
+    .btn-danger:active{background:rgba(231,76,60,.22);}
+
+    /* ── INSTRUCTIONS TAB ── */
+    .inst-wrap{padding:16px;display:flex;flex-direction:column;gap:14px;}
+    .inst-sec{background:var(--card);border:1px solid var(--border);
+      border-radius:14px;overflow:hidden;}
+    .inst-hdr{background:var(--card2);padding:11px 14px;font-size:14px;font-weight:700;color:var(--gold);}
+    .inst-body{padding:14px;font-size:14px;line-height:1.75;color:var(--txt2);}
+    .inst-body ol,.inst-body ul{padding-left:20px;}
+    .inst-body li{margin-bottom:7px;}
+    .inst-body strong{color:var(--txt);}
+    .inst-body a{color:var(--gold);text-decoration:none;}
+    .ver{text-align:center;padding:6px;font-size:11px;color:var(--muted);}
+
+    /* ── RESPONSIVE / TV ── */
+    @media(min-width:700px){
+      .info-row{grid-template-columns:repeat(4,1fr);}
+      .reg-stats{grid-template-columns:repeat(4,1fr);}
+      .t-main{gap:20px;}
+    }
+
+    /* ── TOAST ── */
+    .toast{position:fixed;top:20px;left:50%;
+      transform:translateX(-50%) translateY(-120px);
+      background:var(--card2);border:1px solid var(--gold);border-radius:12px;
+      padding:11px 20px;font-size:14px;font-weight:700;color:var(--gold);
+      z-index:999;transition:transform .3s ease;white-space:nowrap;
+      box-shadow:0 4px 20px rgba(0,0,0,.5);}
+    .toast.show{transform:translateX(-50%) translateY(0);}
+
+    ::-webkit-scrollbar{width:3px;}
+    ::-webkit-scrollbar-track{background:transparent;}
+    ::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+  </style>
+</head>
+<body>
+<div id="app">
+
+<!-- ═══════════ TIMER TAB ═══════════ -->
+<div id="p-timer" class="panel active">
+  <div class="t-head">
+    <div class="t-name" id="disp-name">Texas Hold'em Tournament</div>
+  </div>
+  <div class="t-main">
+    <div class="lvl-badge" id="lvl-badge">Level 1</div>
+    <div class="t-clock" id="t-clock">20:00</div>
+    <div class="blinds-wrap">
+      <div class="blinds-lbl" id="blinds-lbl">Blinds</div>
+      <div class="blinds-val" id="blinds-val">25 / 50</div>
+      <div class="ante-val" id="ante-val"></div>
+    </div>
+    <div class="next-lbl" id="next-lbl">Next: 50 / 100</div>
+  </div>
+  <div class="info-row">
+    <div class="icard">
+      <div class="icard-lbl">Players Left</div>
+      <div class="icard-val" id="t-players">—</div>
+    </div>
+    <div class="icard">
+      <div class="icard-lbl">Prize Pool</div>
+      <div class="icard-val" id="t-pool">$0</div>
+    </div>
+  </div>
+  <div class="pay-section">
+    <div class="pay-hdr">Payouts</div>
+    <div id="t-payrows"></div>
+  </div>
+  <div class="t-controls">
+    <button class="btn-sec" onclick="prevLevel()">◀ Prev</button>
+    <button class="btn-play" id="btn-pp" onclick="toggleTimer()">
+      <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+    </button>
+    <button class="btn-sec" onclick="nextLevel()">Next ▶</button>
+    <button class="btn-mute" id="btn-mute" onclick="toggleMute()">
+      <svg viewBox="0 0 24 24" fill="currentColor" id="mute-svg">
+        <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+      </svg>
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════ REGISTRATION TAB ═══════════ -->
+<div id="p-reg" class="panel">
+  <div class="reg-head">
+    <div class="pool-wrap">
+      <div class="pool-lbl">Total Prize Pool</div>
+      <div class="pool-val" id="r-pool">$0</div>
+    </div>
+    <div class="reg-stats">
+      <div class="stat"><div class="stat-lbl">Entries</div><div class="stat-val" id="r-entries">0</div></div>
+      <div class="stat"><div class="stat-lbl">Rebuys</div><div class="stat-val" id="r-rebuys">0</div></div>
+      <div class="stat"><div class="stat-lbl">Active</div><div class="stat-val" id="r-active">0</div></div>
+    </div>
+  </div>
+  <div class="plyr-count-bar">
+    <span style="font-size:15px;font-weight:700;">Players</span>
+    <div class="cnt-ctrl">
+      <button class="btn-cnt" onclick="removePlayer()">−</button>
+      <span class="cnt-val" id="plyr-count">10</span>
+      <button class="btn-cnt" onclick="addPlayer()">+</button>
+    </div>
+  </div>
+  <div id="players-list"></div>
+</div>
+
+<!-- ═══════════ SETTINGS TAB ═══════════ -->
+<div id="p-settings" class="panel">
+  <div class="set-wrap">
+
+    <div class="set-sec">
+      <div class="set-hdr">Tournament</div>
+      <div class="set-row" style="flex-direction:column;align-items:stretch;gap:6px;">
+        <div class="set-lbl">Tournament Name</div>
+        <input type="text" class="sinput full" id="s-name" placeholder="Tournament Name">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Buy-In Amount<div class="set-sub">Cost to enter</div></div>
+        <input type="number" class="sinput" id="s-buyin" min="0" step="5">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Rebuy Amount<div class="set-sub">Cost per rebuy</div></div>
+        <input type="number" class="sinput" id="s-rebuy" min="0" step="5">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Add-On Amount<div class="set-sub">Cost per add-on</div></div>
+        <input type="number" class="sinput" id="s-addon" min="0" step="5">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Starting Chips</div>
+        <input type="number" class="sinput" id="s-chips" min="500" step="500">
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-hdr">Timer</div>
+      <div class="set-row">
+        <div class="set-lbl">Level Duration<div class="set-sub">Minutes per level</div></div>
+        <input type="number" class="sinput" id="s-lvldur" min="1" max="120" step="5">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Break Every N Levels<div class="set-sub">0 = no breaks</div></div>
+        <input type="number" class="sinput" id="s-brkfreq" min="0" max="20" step="1">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Break Duration<div class="set-sub">Minutes</div></div>
+        <input type="number" class="sinput" id="s-brkdur" min="1" max="60" step="5">
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Rebuy Cutoff Level<div class="set-sub">No rebuys after this level</div></div>
+        <input type="number" class="sinput" id="s-cutoff" min="1" max="30" step="1">
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-hdr">Options</div>
+      <div class="set-row">
+        <div class="set-lbl">Enable Ante<div class="set-sub">Uses ante column from blind structure</div></div>
+        <label class="toggle"><input type="checkbox" id="s-ante"><span class="tslider"></span></label>
+      </div>
+      <div class="set-row">
+        <div class="set-lbl">Sound Notifications</div>
+        <label class="toggle"><input type="checkbox" id="s-sound" checked><span class="tslider"></span></label>
+      </div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-hdr">Payouts</div>
+      <div class="set-row">
+        <div class="set-lbl">Paid Places</div>
+        <input type="number" class="sinput" id="s-payplaces" min="1" max="9" step="1" oninput="renderPayoutSettings()">
+      </div>
+      <div id="payout-set-rows"></div>
+    </div>
+
+    <div class="set-sec">
+      <div class="set-hdr">Blind Structure</div>
+      <div class="blind-tbl-hdr">
+        <div>#</div><div>Small</div><div>Big</div><div>Ante</div><div></div>
+      </div>
+      <div id="blind-list"></div>
+      <button class="btn-add-lv" onclick="addBlindLevel()">+ Add Level</button>
+    </div>
+
+    <button class="btn-save" onclick="saveSettings()">💾 Save Settings</button>
+    <button class="btn-danger" onclick="confirmReset()">↺ Reset Tournament</button>
+    <div style="height:8px;"></div>
+  </div>
+</div>
+
+<!-- ═══════════ INSTRUCTIONS TAB ═══════════ -->
+<div id="p-help" class="panel">
+  <div class="inst-wrap">
+
+    <div style="text-align:center;padding:20px 0 4px;">
+      <div style="font-size:52px;line-height:1;">♠</div>
+      <div style="font-size:22px;font-weight:900;color:var(--gold);margin-top:6px;">Poker Tournament Timer</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:3px;" id="ver-disp">v0.1</div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">📱 Installing on iPhone (No App Store Needed)</div>
+      <div class="inst-body">
+        <ol>
+          <li>Open this page in <strong>Safari</strong> — it must be Safari, not Chrome or Firefox</li>
+          <li>Tap the <strong>Share button</strong> (the box with an arrow pointing up) at the bottom of Safari</li>
+          <li>Scroll down the share sheet and tap <strong>"Add to Home Screen"</strong></li>
+          <li>Give it a name (e.g. "Poker Timer") and tap <strong>"Add"</strong></li>
+          <li>The app icon now appears on your Home Screen and opens fullscreen — no browser chrome</li>
+        </ol>
+        <br>
+        <strong>Note:</strong> The app works offline after the first load. All your settings are saved to your device.
+      </div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">📺 Casting to a TV</div>
+      <div class="inst-body">
+        <ol>
+          <li>Make sure your iPhone and Apple TV / AirPlay TV are on the <strong>same Wi-Fi network</strong></li>
+          <li>Open the Poker Timer app from your Home Screen (fullscreen looks best)</li>
+          <li>Swipe down from the <strong>top-right corner</strong> to open Control Center</li>
+          <li>Tap <strong>Screen Mirroring</strong> and choose your TV</li>
+          <li>Navigate to the <strong>Timer tab</strong> — the large display is optimized for TV viewing</li>
+        </ol>
+        <br>
+        <strong>Pro tip:</strong> Enable <strong>Do Not Disturb</strong> and keep your iPhone plugged in — screen mirroring drains battery fast.
+      </div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">⏱️ Using the Timer</div>
+      <div class="inst-body">
+        <ul>
+          <li>Tap the <strong>gold circle button</strong> to start or pause the countdown</li>
+          <li>Use <strong>◀ Prev</strong> and <strong>Next ▶</strong> to manually move between levels</li>
+          <li>The timer auto-advances and plays a chime when a level ends</li>
+          <li>The timer turns <strong>orange</strong> with 60 seconds left as a visual warning</li>
+          <li>During a <strong>break</strong>, the timer turns blue and shows break time remaining</li>
+          <li>Tap the <strong>speaker icon</strong> to mute/unmute all sounds</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">👥 Player Registration</div>
+      <div class="inst-body">
+        <ul>
+          <li>Use <strong>+/−</strong> at the top to add or remove player seats</li>
+          <li>Tap a player name to rename them</li>
+          <li>Tap <strong>Buy In</strong> to mark a player as entered — this adds to the prize pool</li>
+          <li>Use the <strong>Rebuy +/−</strong> to track additional buy-ins during the tournament</li>
+          <li>Tap <strong>✕</strong> to mark a player as eliminated — they appear dimmed</li>
+          <li>The prize pool and payout splits update live as players enter and rebuy</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">⚙️ Adjusting Settings</div>
+      <div class="inst-body">
+        <ul>
+          <li>Set the <strong>Tournament Name</strong> — it displays prominently on the timer screen</li>
+          <li>Set <strong>Buy-In, Rebuy, and Add-On amounts</strong> for automatic prize pool math</li>
+          <li>Set <strong>Level Duration</strong> for how long each blind level runs</li>
+          <li>Set <strong>Break Every N Levels</strong> (e.g. 4 = break after levels 4, 8, 12...)</li>
+          <li>Set <strong>Rebuy Cutoff Level</strong> — players can't rebuy after this level number</li>
+          <li>Toggle <strong>Ante</strong> on/off — uses the ante column from the blind structure</li>
+          <li>Edit the <strong>Blind Structure</strong> to customize any level's small blind, big blind, and ante</li>
+          <li>Set <strong>Payout percentages</strong> — they must add up to 100%</li>
+          <li>Always press <strong>Save Settings</strong> — settings persist across sessions</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">💡 Tips</div>
+      <div class="inst-body">
+        <ul>
+          <li>Keep the app <strong>open on screen</strong> while hosting — minimizing too long may pause the timer on older iPhones</li>
+          <li>The timer screen is designed to be readable from across the room on a TV</li>
+          <li>Prize pool updates instantly as players buy in — great for transparency</li>
+          <li>Rebuy cutoff level is shown live on the timer screen so players always know</li>
+          <li>Run the app fullscreen from your Home Screen for the cleanest TV cast</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="inst-sec">
+      <div class="inst-hdr">📬 Suggest Features or Report Issues</div>
+      <div class="inst-body">
+        Have an idea or found a bug? Email:<br><br>
+        <a href="mailto:davidarnell85@gmail.com" style="font-size:17px;font-weight:800;">davidarnell85@gmail.com</a>
+        <br><br>
+        Put <strong>"Poker Timer"</strong> in the subject line.
+      </div>
+    </div>
+
+    <div class="ver" id="ver-badge">Poker Tournament Timer v0.1 &nbsp;♠♥♦♣</div>
+  </div>
+</div>
+
+<!-- ═══════════ TAB BAR ═══════════ -->
+<nav id="tabbar">
+  <button class="tbtn active" id="tb-timer" onclick="switchTab('timer')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z"/></svg>
+    Timer
+  </button>
+  <button class="tbtn" id="tb-reg" onclick="switchTab('reg')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></svg>
+    Players
+  </button>
+  <button class="tbtn" id="tb-settings" onclick="switchTab('settings')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.22-.07.47.12.61l2.03 1.58c-.05.3-.07.62-.07.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+    Settings
+  </button>
+  <button class="tbtn" id="tb-help" onclick="switchTab('help')">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/></svg>
+    Help
+  </button>
+</nav>
+
+<div class="toast" id="toast"></div>
+</div><!-- #app -->
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONSTANTS & DEFAULTS
+// ═══════════════════════════════════════════════════
+
+const VERSION = 'v0.1';
+
+const DEFAULT_BLINDS = [
+  {sb:25,  bb:50,   ante:0},
+  {sb:50,  bb:100,  ante:0},
+  {sb:75,  bb:150,  ante:0},
+  {sb:100, bb:200,  ante:0},
+  {sb:150, bb:300,  ante:25},
+  {sb:200, bb:400,  ante:50},
+  {sb:300, bb:600,  ante:75},
+  {sb:400, bb:800,  ante:100},
+  {sb:500, bb:1000, ante:150},
+  {sb:700, bb:1400, ante:200},
+  {sb:1000,bb:2000, ante:300},
+  {sb:1500,bb:3000, ante:400},
+  {sb:2000,bb:4000, ante:500},
+  {sb:3000,bb:6000, ante:750},
+  {sb:4000,bb:8000, ante:1000},
+];
+
+const DEFAULT_SETTINGS = {
+  name: "Texas Hold'em Tournament",
+  buyin: 50,
+  rebuy: 50,
+  addon: 50,
+  chips: 10000,
+  lvlMin: 20,
+  brkFreq: 4,
+  brkMin: 15,
+  cutoff: 4,
+  ante: true,
+  sound: true,
+  payPlaces: 3,
+  payPct: [50, 30, 20],
+  blinds: DEFAULT_BLINDS.map(b => ({...b})),
+};
+
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+
+let S = {}; // settings
+let P = []; // players
+let T = {   // timer state
+  level: 1,
+  isBreak: false,
+  running: false,
+  remSec: null,
+  startTs: null,
+  muted: false,
+};
+
+let rafId = null;
+let w60 = false, w30 = false;
+let audioCtx = null;
+
+// ═══════════════════════════════════════════════════
+// STORAGE
+// ═══════════════════════════════════════════════════
+
+function loadAll() {
+  try {
+    const ss = localStorage.getItem('pt_settings');
+    S = ss ? JSON.parse(ss) : deepClone(DEFAULT_SETTINGS);
+    // Ensure all keys exist (upgrade path)
+    for (const k in DEFAULT_SETTINGS) {
+      if (S[k] === undefined) S[k] = DEFAULT_SETTINGS[k];
+    }
+  } catch(e) { S = deepClone(DEFAULT_SETTINGS); }
+
+  try {
+    const sp = localStorage.getItem('pt_players');
+    P = sp ? JSON.parse(sp) : mkDefaultPlayers(10);
+  } catch(e) { P = mkDefaultPlayers(10); }
+
+  try {
+    const st = localStorage.getItem('pt_timer');
+    if (st) {
+      const saved = JSON.parse(st);
+      T = {...T, ...saved};
+      // If we were running, recalculate remaining based on elapsed time
+      if (T.running && T.startTs) {
+        const elapsed = Math.floor((Date.now() - T.startTs) / 1000);
+        T.remSec = Math.max(0, (T.remSec || getLvlSec()) - elapsed);
+        T.startTs = null;
+        T.running = false; // pause on reload — user must resume
+      }
+    } else {
+      T.remSec = getLvlSec();
+    }
+  } catch(e) { T.remSec = getLvlSec(); }
+
+  if (T.remSec === null) T.remSec = getLvlSec();
+}
+
+function saveSettings() {
+  localStorage.setItem('pt_settings', JSON.stringify(S));
+}
+
+function savePlayers() {
+  localStorage.setItem('pt_players', JSON.stringify(P));
+}
+
+function saveTimer() {
+  const snap = {...T};
+  if (snap.running && snap.startTs) {
+    // Store remaining at this moment
+    snap.remSec = getRem();
+    snap.startTs = null;
+  }
+  localStorage.setItem('pt_timer', JSON.stringify(snap));
+}
+
+function deepClone(o) { return JSON.parse(JSON.stringify(o)); }
+
+function mkDefaultPlayers(n) {
+  return Array.from({length: n}, (_, i) => ({
+    id: Date.now() + i,
+    name: `Player ${i + 1}`,
+    buyIn: false,
+    rebuys: 0,
+    addons: 0,
+    elim: false,
+    elimOrder: null,
+  }));
+}
+
+// ═══════════════════════════════════════════════════
+// AUDIO
+// ═══════════════════════════════════════════════════
+
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function beep(freq, dur, vol=0.4, type='sine') {
+  try {
+    const ctx = getAudioCtx();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.connect(g); g.connect(ctx.destination);
+    o.type = type;
+    o.frequency.setValueAtTime(freq, ctx.currentTime);
+    g.gain.setValueAtTime(vol, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+    o.start(ctx.currentTime);
+    o.stop(ctx.currentTime + dur);
+  } catch(e) {}
+}
+
+function sndLevelChange() {
+  beep(440, 0.15, 0.5);
+  setTimeout(() => beep(554, 0.15, 0.5), 160);
+  setTimeout(() => beep(659, 0.4,  0.5), 320);
+}
+
+function sndBreak() {
+  beep(523, 0.3, 0.4);
+  setTimeout(() => beep(392, 0.3, 0.4), 320);
+  setTimeout(() => beep(330, 0.5, 0.35), 640);
+}
+
+function sndBreakEnd() {
+  beep(330, 0.15, 0.4);
+  setTimeout(() => beep(392, 0.15, 0.4), 160);
+  setTimeout(() => beep(523, 0.4,  0.5), 320);
+}
+
+function sndWarn() { beep(880, 0.08, 0.35); }
+function sndWarn2() { beep(880, 0.08, 0.4); setTimeout(()=>beep(880,0.08,.4),140); }
+
+function canSound() { return !T.muted && S.sound; }
+
+// ═══════════════════════════════════════════════════
+// TIMER ENGINE
+// ═══════════════════════════════════════════════════
+
+function getLvlSec(lvl) {
+  lvl = lvl || T.level;
+  return S.lvlMin * 60;
+}
+
+function getBrkSec() { return S.brkMin * 60; }
+
+function getRem() {
+  if (!T.running || !T.startTs) return T.remSec;
+  const elapsed = Math.floor((Date.now() - T.startTs) / 1000);
+  return Math.max(0, T.remSec - elapsed);
+}
+
+function getBlind(lvl) {
+  lvl = (lvl !== undefined) ? lvl : T.level;
+  const idx = Math.min(lvl - 1, S.blinds.length - 1);
+  return S.blinds[Math.max(0, idx)];
+}
+
+function shouldBreakAfterLevel(lvl) {
+  return S.brkFreq > 0 && (lvl % S.brkFreq === 0) && (lvl < S.blinds.length);
+}
+
+function doAdvance() {
+  // Called when timer reaches 0 — determine next state
+  if (T.isBreak) {
+    // Break ends → next game level
+    T.level = Math.min(T.level + 1, S.blinds.length);
+    T.isBreak = false;
+    T.remSec = getLvlSec();
+    if (canSound()) sndBreakEnd();
+    toast(`Level ${T.level} — ${fmtBlinds(T.level)}`);
+  } else {
+    if (shouldBreakAfterLevel(T.level)) {
+      T.isBreak = true;
+      T.remSec = getBrkSec();
+      if (canSound()) sndBreak();
+      toast('Break Time! ☕');
+    } else {
+      T.level = Math.min(T.level + 1, S.blinds.length);
+      T.isBreak = false;
+      T.remSec = getLvlSec();
+      if (canSound()) sndLevelChange();
+      toast(`Level ${T.level} — ${fmtBlinds(T.level)}`);
+    }
+  }
+  w60 = false; w30 = false;
+  T.startTs = Date.now();
+  saveTimer();
+  renderTimer();
+}
+
+function tick() {
+  if (!T.running) return;
+  const rem = getRem();
+
+  if (canSound()) {
+    if (rem <= 60 && !w60) { w60 = true; sndWarn(); }
+    if (rem <= 30 && !w30) { w30 = true; sndWarn2(); }
+  }
+
+  renderTimerClock(rem);
+
+  if (rem <= 0) {
+    doAdvance();
+    rafId = requestAnimationFrame(tick);
+    return;
+  }
+  rafId = requestAnimationFrame(tick);
+}
+
+function toggleTimer() {
+  // Ensure audio context is active (iOS requires user gesture)
+  try { getAudioCtx().resume(); } catch(e) {}
+
+  if (T.running) {
+    T.remSec = getRem();
+    T.startTs = null;
+    T.running = false;
+    cancelAnimationFrame(rafId);
+  } else {
+    T.running = true;
+    T.startTs = Date.now();
+    w60 = T.remSec <= 60;
+    w30 = T.remSec <= 30;
+    rafId = requestAnimationFrame(tick);
+  }
+  saveTimer();
+  renderTimer();
+}
+
+function nextLevel() {
+  const wasRunning = T.running;
+  if (T.running) { T.remSec = getRem(); T.running = false; cancelAnimationFrame(rafId); }
+
+  if (T.isBreak) {
+    T.level = Math.min(T.level + 1, S.blinds.length);
+    T.isBreak = false;
+    T.remSec = getLvlSec();
+  } else if (shouldBreakAfterLevel(T.level)) {
+    T.isBreak = true;
+    T.remSec = getBrkSec();
+  } else {
+    T.level = Math.min(T.level + 1, S.blinds.length);
+    T.isBreak = false;
+    T.remSec = getLvlSec();
+  }
+  w60 = false; w30 = false;
+
+  if (wasRunning) {
+    T.running = true;
+    T.startTs = Date.now();
+    rafId = requestAnimationFrame(tick);
+  } else {
+    T.startTs = null;
+  }
+  saveTimer();
+  renderTimer();
+}
+
+function prevLevel() {
+  const wasRunning = T.running;
+  if (T.running) { T.remSec = getRem(); T.running = false; cancelAnimationFrame(rafId); }
+
+  if (T.isBreak) {
+    T.isBreak = false;
+    T.remSec = getLvlSec();
+  } else {
+    if (T.level > 1) T.level--;
+    T.isBreak = false;
+    T.remSec = getLvlSec();
+  }
+  w60 = false; w30 = false;
+
+  if (wasRunning) {
+    T.running = true;
+    T.startTs = Date.now();
+    rafId = requestAnimationFrame(tick);
+  } else {
+    T.startTs = null;
+  }
+  saveTimer();
+  renderTimer();
+}
+
+function toggleMute() {
+  T.muted = !T.muted;
+  saveTimer();
+  renderTimer();
+}
+
+// ═══════════════════════════════════════════════════
+// CALCULATIONS
+// ═══════════════════════════════════════════════════
+
+function getPrizePool() {
+  let pool = 0;
+  P.forEach(p => {
+    if (p.buyIn) pool += S.buyin;
+    pool += p.rebuys * S.rebuy;
+    pool += p.addons * S.addon;
+  });
+  return pool;
+}
+
+function getPayouts(pool) {
+  return S.payPct.slice(0, S.payPlaces).map(pct => Math.floor(pool * pct / 100));
+}
+
+function activePlayers()    { return P.filter(p => !p.elim).length; }
+function boughtInPlayers()  { return P.filter(p => p.buyIn).length; }
+function totalRebuys()      { return P.reduce((s,p) => s + p.rebuys, 0); }
+
+// ═══════════════════════════════════════════════════
+// FORMATTERS
+// ═══════════════════════════════════════════════════
+
+function fmtNum(n) {
+  if (n >= 1000) return (n/1000).toFixed(n % 1000 ? 1 : 0) + 'K';
+  return n.toString();
+}
+
+function fmtMoney(n) { return '$' + n.toLocaleString(); }
+
+function fmtTime(sec) {
+  const m = Math.floor(sec / 60);
+  const s = sec % 60;
+  return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+}
+
+function fmtBlinds(lvl) {
+  const b = getBlind(lvl);
+  return `${fmtNum(b.sb)} / ${fmtNum(b.bb)}`;
+}
+
+function placeLabel(i) {
+  const labels = ['1st 🥇','2nd 🥈','3rd 🥉','4th','5th','6th','7th','8th','9th'];
+  return labels[i] || `${i+1}th`;
+}
+
+function placeCls(i) {
+  return ['pay-p1','pay-p2','pay-p3'][i] || '';
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: TIMER TAB
+// ═══════════════════════════════════════════════════
+
+function renderTimer() {
+  // Tournament name
+  document.getElementById('disp-name').textContent = S.name;
+
+  // Level badge
+  const badge = document.getElementById('lvl-badge');
+  if (T.isBreak) {
+    badge.textContent = '☕ BREAK';
+    badge.className = 'lvl-badge brk';
+  } else {
+    badge.textContent = `Level ${T.level}`;
+    badge.className = 'lvl-badge';
+  }
+
+  // Blinds
+  if (T.isBreak) {
+    // Show upcoming blinds during break
+    const nextLvl = Math.min(T.level + 1, S.blinds.length);
+    const b = getBlind(nextLvl);
+    document.getElementById('blinds-lbl').textContent = 'Upcoming Blinds';
+    document.getElementById('blinds-val').textContent = `${fmtNum(b.sb)} / ${fmtNum(b.bb)}`;
+    document.getElementById('ante-val').textContent = (S.ante && b.ante) ? `Ante: ${fmtNum(b.ante)}` : '';
+    document.getElementById('next-lbl').textContent = `Resume → Level ${nextLvl}`;
+  } else {
+    const b = getBlind(T.level);
+    document.getElementById('blinds-lbl').textContent = 'Blinds';
+    document.getElementById('blinds-val').textContent = `${fmtNum(b.sb)} / ${fmtNum(b.bb)}`;
+    document.getElementById('ante-val').textContent = (S.ante && b.ante) ? `Ante: ${fmtNum(b.ante)}` : '';
+    const nextLvl = T.level + 1;
+    if (nextLvl <= S.blinds.length) {
+      const nb = getBlind(nextLvl);
+      document.getElementById('next-lbl').textContent = `Next: ${fmtNum(nb.sb)} / ${fmtNum(nb.bb)}`;
+    } else {
+      document.getElementById('next-lbl').textContent = 'Final Level';
+    }
+  }
+
+  // Clock
+  renderTimerClock(getRem());
+
+  // Play/pause icon
+  const ppBtn = document.getElementById('btn-pp');
+  ppBtn.innerHTML = T.running
+    ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>`
+    : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`;
+
+  // Mute button
+  const muteBtn = document.getElementById('btn-mute');
+  muteBtn.className = 'btn-mute' + (T.muted ? ' off' : '');
+  document.getElementById('mute-svg').innerHTML = T.muted
+    ? `<path d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"/>`
+    : `<path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>`;
+
+  // Info cards
+  document.getElementById('t-players').textContent = activePlayers();
+  const pool = getPrizePool();
+  document.getElementById('t-pool').textContent = fmtMoney(pool);
+
+  // Payout rows
+  const payRows = document.getElementById('t-payrows');
+  if (pool === 0) {
+    payRows.innerHTML = `<div class="pay-row" style="justify-content:center;color:var(--muted);font-size:13px;">Buy-ins will appear here</div>`;
+  } else {
+    const payouts = getPayouts(pool);
+    payRows.innerHTML = payouts.map((amt, i) =>
+      `<div class="pay-row">
+        <span class="pay-place ${placeCls(i)}">${placeLabel(i)}</span>
+        <span><span class="pay-amt">${fmtMoney(amt)}</span><span class="pay-pct">${S.payPct[i]}%</span></span>
+      </div>`
+    ).join('');
+  }
+}
+
+function renderTimerClock(rem) {
+  const el = document.getElementById('t-clock');
+  el.textContent = fmtTime(rem);
+  if (T.isBreak) el.className = 't-clock brk';
+  else if (rem <= 60) el.className = 't-clock warn';
+  else el.className = 't-clock';
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: REGISTRATION TAB
+// ═══════════════════════════════════════════════════
+
+function renderReg() {
+  const pool = getPrizePool();
+  document.getElementById('r-pool').textContent = fmtMoney(pool);
+  document.getElementById('r-entries').textContent = boughtInPlayers();
+  document.getElementById('r-rebuys').textContent = totalRebuys();
+  document.getElementById('r-active').textContent = activePlayers();
+  document.getElementById('plyr-count').textContent = P.length;
+  renderPlayersList();
+}
+
+function renderPlayersList() {
+  const el = document.getElementById('players-list');
+  const rebuyClosed = T.level > S.cutoff && !T.isBreak;
+
+  el.innerHTML = P.map((p, i) => {
+    const totalPaid = (p.buyIn ? S.buyin : 0) + p.rebuys * S.rebuy + p.addons * S.addon;
+    const sub = p.buyIn
+      ? `$${totalPaid} total · ${p.rebuys} rebuy${p.rebuys!==1?'s':''} · ${p.addons} add-on${p.addons!==1?'s':''}`
+      : 'Not bought in';
+
+    return `<div class="plyr-card${p.elim?' out':''}${p.buyIn?' in':''}">
+      <div class="plyr-num">${i+1}</div>
+      <div class="plyr-info">
+        <input class="plyr-name${p.elim?' out':''}" value="${esc(p.name)}"
+          onchange="renamePlayer(${p.id}, this.value)"
+          onblur="renamePlayer(${p.id}, this.value)">
+        <div class="plyr-sub">${sub}</div>
+      </div>
+      <div class="plyr-acts">
+        ${p.buyIn ? `
+        <div class="rbuy-grp">
+          <div class="rbuy-lbl">Rebuy</div>
+          <div class="rbuy-row">
+            <button class="btn-rb" onclick="adjRebuy(${p.id},-1)">−</button>
+            <span class="rb-val">${p.rebuys}</span>
+            <button class="btn-rb" ${rebuyClosed?'disabled style="opacity:.4"':''} onclick="adjRebuy(${p.id},1)">+</button>
+          </div>
+        </div>` : ''}
+        <button class="btn-bi${p.buyIn?' on':''}" onclick="toggleBuyIn(${p.id})">
+          ${p.buyIn ? '✓ In' : 'Buy In'}
+        </button>
+        <button class="btn-elim${p.elim?' on':''}" onclick="toggleElim(${p.id})" title="${p.elim?'Restore player':'Eliminate player'}">✕</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function esc(s) {
+  return s.replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ═══════════════════════════════════════════════════
+// RENDER: SETTINGS TAB
+// ═══════════════════════════════════════════════════
+
+function loadSettingsToForm() {
+  document.getElementById('s-name').value = S.name;
+  document.getElementById('s-buyin').value = S.buyin;
+  document.getElementById('s-rebuy').value = S.rebuy;
+  document.getElementById('s-addon').value = S.addon;
+  document.getElementById('s-chips').value = S.chips;
+  document.getElementById('s-lvldur').value = S.lvlMin;
+  document.getElementById('s-brkfreq').value = S.brkFreq;
+  document.getElementById('s-brkdur').value = S.brkMin;
+  document.getElementById('s-cutoff').value = S.cutoff;
+  document.getElementById('s-ante').checked = S.ante;
+  document.getElementById('s-sound').checked = S.sound;
+  document.getElementById('s-payplaces').value = S.payPlaces;
+  renderPayoutSettings();
+  renderBlindList();
+}
+
+function renderPayoutSettings() {
+  const places = parseInt(document.getElementById('s-payplaces').value) || S.payPlaces;
+  const rows = document.getElementById('payout-set-rows');
+  // Ensure payPct array is long enough
+  while (S.payPct.length < places) S.payPct.push(0);
+  const labels = ['1st 🥇','2nd 🥈','3rd 🥉','4th','5th','6th','7th','8th','9th'];
+  rows.innerHTML = Array.from({length: places}, (_, i) =>
+    `<div class="pay-set-row">
+      <div class="pay-set-place ${placeCls(i)}">${labels[i]||`${i+1}th`}</div>
+      <input type="range" min="0" max="100" step="5" value="${S.payPct[i]||0}"
+        oninput="updPayPct(${i}, this.value); document.getElementById('pct-val-${i}').textContent=this.value+'%'">
+      <div id="pct-val-${i}" style="font-size:14px;font-weight:700;text-align:right;">${S.payPct[i]||0}%</div>
+    </div>`
+  ).join('');
+}
+
+function updPayPct(i, v) {
+  S.payPct[i] = parseInt(v);
+}
+
+function renderBlindList() {
+  const el = document.getElementById('blind-list');
+  el.innerHTML = S.blinds.map((b, i) =>
+    `<div class="blind-row">
+      <div class="blind-row-lv">${i+1}</div>
+      <input type="number" value="${b.sb}" min="0" step="25"
+        onchange="S.blinds[${i}].sb=+this.value">
+      <input type="number" value="${b.bb}" min="0" step="25"
+        onchange="S.blinds[${i}].bb=+this.value">
+      <input type="number" value="${b.ante}" min="0" step="25"
+        onchange="S.blinds[${i}].ante=+this.value">
+      <button class="btn-rm-lv" onclick="removeBlindLevel(${i})" ${S.blinds.length<=2?'disabled style="opacity:.3"':''}>×</button>
+    </div>`
+  ).join('');
+}
+
+function addBlindLevel() {
+  const last = S.blinds[S.blinds.length - 1];
+  S.blinds.push({ sb: last.sb*2, bb: last.bb*2, ante: last.ante*2 });
+  renderBlindList();
+}
+
+function removeBlindLevel(i) {
+  if (S.blinds.length <= 2) return;
+  S.blinds.splice(i, 1);
+  renderBlindList();
+}
+
+// ═══════════════════════════════════════════════════
+// EVENT HANDLERS: SETTINGS
+// ═══════════════════════════════════════════════════
+
+function saveSettings() {
+  // Read form values into S
+  S.name = document.getElementById('s-name').value.trim() || "Texas Hold'em Tournament";
+  S.buyin = +document.getElementById('s-buyin').value || 0;
+  S.rebuy = +document.getElementById('s-rebuy').value || 0;
+  S.addon = +document.getElementById('s-addon').value || 0;
+  S.chips = +document.getElementById('s-chips').value || 10000;
+  S.lvlMin = +document.getElementById('s-lvldur').value || 20;
+  S.brkFreq = +document.getElementById('s-brkfreq').value || 0;
+  S.brkMin = +document.getElementById('s-brkdur').value || 15;
+  S.cutoff = +document.getElementById('s-cutoff').value || 4;
+  S.ante = document.getElementById('s-ante').checked;
+  S.sound = document.getElementById('s-sound').checked;
+  S.payPlaces = +document.getElementById('s-payplaces').value || 3;
+
+  // Validate payout percentages sum
+  const total = S.payPct.slice(0, S.payPlaces).reduce((s,v) => s + v, 0);
+  if (total !== 100) {
+    toast(`⚠️ Payouts add up to ${total}% — should be 100%`);
+    return;
+  }
+
+  localStorage.setItem('pt_settings', JSON.stringify(S));
+
+  // Update timer remaining if level duration changed
+  if (!T.running) {
+    T.remSec = T.isBreak ? getBrkSec() : getLvlSec();
+    saveTimer();
+  }
+
+  toast('✅ Settings saved!');
+  renderTimer();
+  renderReg();
+}
+
+function confirmReset() {
+  if (confirm('Reset tournament? This clears all player data and restarts the timer at Level 1.')) {
+    resetTournament();
+  }
+}
+
+function resetTournament() {
+  T.level = 1;
+  T.isBreak = false;
+  T.running = false;
+  T.remSec = getLvlSec();
+  T.startTs = null;
+  w60 = false; w30 = false;
+  cancelAnimationFrame(rafId);
+
+  P = mkDefaultPlayers(P.length);
+  savePlayers();
+  saveTimer();
+  renderTimer();
+  renderReg();
+  toast('Tournament reset');
+}
+
+// ═══════════════════════════════════════════════════
+// EVENT HANDLERS: PLAYERS
+// ═══════════════════════════════════════════════════
+
+function addPlayer() {
+  const n = P.length + 1;
+  P.push({ id: Date.now(), name: `Player ${n}`, buyIn: false, rebuys: 0, addons: 0, elim: false, elimOrder: null });
+  savePlayers();
+  renderReg();
+}
+
+function removePlayer() {
+  if (P.length <= 1) return;
+  P.pop();
+  savePlayers();
+  renderReg();
+}
+
+function renamePlayer(id, name) {
+  const p = P.find(p => p.id === id);
+  if (p) { p.name = name.trim() || p.name; savePlayers(); }
+}
+
+function toggleBuyIn(id) {
+  const p = P.find(p => p.id === id);
+  if (!p) return;
+  p.buyIn = !p.buyIn;
+  if (!p.buyIn) { p.rebuys = 0; p.addons = 0; }
+  savePlayers();
+  renderReg();
+  renderTimer();
+}
+
+function adjRebuy(id, delta) {
+  const p = P.find(p => p.id === id);
+  if (!p || !p.buyIn) return;
+  const rebuyClosed = T.level > S.cutoff;
+  if (delta > 0 && rebuyClosed) { toast(`Rebuy cutoff was Level ${S.cutoff}`); return; }
+  p.rebuys = Math.max(0, p.rebuys + delta);
+  savePlayers();
+  renderReg();
+  renderTimer();
+}
+
+function toggleElim(id) {
+  const p = P.find(p => p.id === id);
+  if (!p) return;
+  p.elim = !p.elim;
+  p.elimOrder = p.elim ? Date.now() : null;
+  savePlayers();
+  renderReg();
+  renderTimer();
+}
+
+// ═══════════════════════════════════════════════════
+// TAB NAVIGATION
+// ═══════════════════════════════════════════════════
+
+const tabMap = {
+  timer:    ['p-timer',    'tb-timer'],
+  reg:      ['p-reg',      'tb-reg'],
+  settings: ['p-settings', 'tb-settings'],
+  help:     ['p-help',     'tb-help'],
+};
+
+function switchTab(id) {
+  for (const [pid, bid] of Object.values(tabMap)) {
+    document.getElementById(pid).classList.remove('active');
+    document.getElementById(bid).classList.remove('active');
+  }
+  const [pid, bid] = tabMap[id];
+  document.getElementById(pid).classList.add('active');
+  document.getElementById(bid).classList.add('active');
+
+  if (id === 'settings') loadSettingsToForm();
+  if (id === 'reg') renderReg();
+  if (id === 'timer') renderTimer();
+}
+
+// ═══════════════════════════════════════════════════
+// TOAST
+// ═══════════════════════════════════════════════════
+
+let toastTimer = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2800);
+}
+
+// ═══════════════════════════════════════════════════
+// VISIBILITY / PAGE LIFECYCLE
+// ═══════════════════════════════════════════════════
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && T.running) {
+    // Recalculate remaining time after app was backgrounded
+    const rem = getRem();
+    if (rem <= 0) {
+      doAdvance();
+    }
+    renderTimer();
+  }
+});
+
+window.addEventListener('pageshow', () => {
+  if (T.running) {
+    const rem = getRem();
+    if (rem <= 0) doAdvance();
+    renderTimer();
+  }
+});
+
+// Save timer state periodically when running
+setInterval(() => { if (T.running) saveTimer(); }, 10000);
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+
+function init() {
+  loadAll();
+  renderTimer();
+  renderReg();
+
+  // Register service worker for PWA / offline
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
+  }
+
+  // Version display
+  document.getElementById('ver-disp').textContent = VERSION;
+  document.getElementById('ver-badge').textContent = `Poker Tournament Timer ${VERSION}  ♠♥♦♣`;
+}
+
+window.addEventListener('load', init);
+</script>
+</body>
+</html>
